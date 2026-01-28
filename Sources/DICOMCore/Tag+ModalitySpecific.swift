@@ -57,9 +57,9 @@ extension Tag {
     /// VR: SH, VM: 1-n
     public static let convolutionKernel = Tag(group: 0x0018, element: 0x1210)
     
-    /// Revolution Time (0018,1140)
-    /// VR: DS, VM: 1
-    public static let revolutionTime = Tag(group: 0x0018, element: 0x1140)
+    /// Revolution Time (0018,9305)
+    /// VR: FD, VM: 1
+    public static let revolutionTime = Tag(group: 0x0018, element: 0x9305)
     
     /// Single Collimation Width (0018,9306)
     /// VR: FD, VM: 1
@@ -231,7 +231,9 @@ extension Tag {
     
     /// Ultrasound Color Data Present (0028,0014)
     /// VR: US, VM: 1
-    public static let ultrasoundColorDataPresent = Tag(group: 0x0028, element: 0x0014)
+    /// Retired - conflicts with Frame Dimension Pointer
+    /// This tag is retired in recent DICOM versions
+    // public static let ultrasoundColorDataPresent = Tag(group: 0x0028, element: 0x0014)
     
     /// Mechanical Index (0018,5022)
     /// VR: DS, VM: 1

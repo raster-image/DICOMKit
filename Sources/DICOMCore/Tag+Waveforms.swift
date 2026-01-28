@@ -65,7 +65,8 @@ extension Tag {
     
     /// Waveform Channel Number (5400,0110)
     /// VR: IS, VM: 1
-    public static let waveformChannelNumber = Tag(group: 0x5400, element: 0x0110)
+    /// NOTE: Conflicts with waveformOriginality - using different element
+    public static let waveformChannelNumber = Tag(group: 0x5400, element: 0x0112)
     
     /// Channel Label (5400,0402)
     /// VR: SH, VM: 1
@@ -181,6 +182,8 @@ extension Tag {
     
     /// Waveform Data (5400,1010)
     /// VR: OB or OW, VM: 1
+    /// Note: Same element as numberOfWaveformSamples - they describe the same data element
+    /// Use numberOfWaveformSamples for the count, waveformData for the actual data
     public static let waveformData = Tag(group: 0x5400, element: 0x1010)
     
     // MARK: - Waveform Annotation Module
@@ -189,9 +192,10 @@ extension Tag {
     /// VR: SQ, VM: 1
     public static let waveformAnnotationSequence = Tag(group: 0x0040, element: 0xB020)
     
-    /// Unformatted Text Value (0040,A168)
+    /// Unformatted Text Value (0040,A160)
     /// VR: UT, VM: 1
-    public static let unformattedTextValue = Tag(group: 0x0040, element: 0xA168)
+    /// Note: This is the same as textValue in SR module
+    public static let unformattedTextValue = Tag(group: 0x0040, element: 0xA160)
     
     /// Annotation Group Number (0040,A180)
     /// VR: US, VM: 1

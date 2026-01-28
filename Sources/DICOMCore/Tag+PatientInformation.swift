@@ -183,7 +183,7 @@ extension Tag {
     
     /// Breed Registration Number (0010,2295)
     /// VR: LO, VM: 1
-    public static let breedRegistrationNumber = Tag(group: 0x0010, element: 0x0295)
+    public static let breedRegistrationNumber = Tag(group: 0x0010, element: 0x2295)
     
     /// Breed Registry Code Sequence (0010,2296)
     /// VR: SQ, VM: 1
