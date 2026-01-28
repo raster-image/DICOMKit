@@ -19,9 +19,18 @@ public struct DataSet: Sendable {
     }
     
     /// Accesses a data element by tag
+    ///
+    /// Use this subscript to get or set data elements in the data set.
+    /// Setting a value to nil removes the element.
     public subscript(tag: Tag) -> DataElement? {
         get { elements[tag] }
-        set { elements[tag] = newValue }
+        set {
+            if let newValue = newValue {
+                elements[tag] = newValue
+            } else {
+                elements.removeValue(forKey: tag)
+            }
+        }
     }
     
     /// Returns the string value for a given tag, if available
@@ -64,7 +73,8 @@ public struct DataSet: Sendable {
     
     /// All data elements in tag order
     public var allElements: [DataElement] {
-        return tags.map { elements[$0]! }
+        let sortedTags = tags
+        return sortedTags.compactMap { elements[$0] }
     }
 }
 

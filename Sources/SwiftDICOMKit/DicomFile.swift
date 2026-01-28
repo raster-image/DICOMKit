@@ -34,7 +34,7 @@ public struct DicomFile: Sendable {
     public static func read(from data: Data) throws -> DicomFile {
         // Validate minimum size (128 byte preamble + 4 byte "DICM")
         guard data.count >= 132 else {
-            throw DicomError.invalidPreamble
+            throw DicomError.unexpectedEndOfData
         }
         
         // Validate "DICM" prefix at offset 128
