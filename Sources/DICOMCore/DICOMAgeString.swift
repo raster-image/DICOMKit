@@ -123,7 +123,7 @@ public struct DICOMAgeString: Sendable, Hashable {
     /// Uses standard approximations:
     /// - Days: value
     /// - Weeks: value * 7
-    /// - Months: value * 30.44
+    /// - Months: value * 30.4375 (365.25 / 12)
     /// - Years: value * 365.25
     ///
     /// - Returns: Approximate age in days as a Double
@@ -134,7 +134,7 @@ public struct DICOMAgeString: Sendable, Hashable {
         case .weeks:
             return Double(value) * 7.0
         case .months:
-            return Double(value) * 30.44
+            return Double(value) * 30.4375  // 365.25 / 12 for consistency
         case .years:
             return Double(value) * 365.25
         }

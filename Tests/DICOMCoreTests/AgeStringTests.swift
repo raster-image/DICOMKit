@@ -142,9 +142,9 @@ struct DICOMAgeStringTests {
         let weeks = DICOMAgeString(value: 2, unit: .weeks)
         #expect(weeks.approximateDays == 14.0)
         
-        // Months (30.44 days per month)
+        // Months (30.4375 days per month = 365.25 / 12)
         let months = DICOMAgeString(value: 1, unit: .months)
-        #expect(months.approximateDays == 30.44)
+        #expect(months.approximateDays == 30.4375)
         
         // Years (365.25 days per year)
         let years = DICOMAgeString(value: 1, unit: .years)
