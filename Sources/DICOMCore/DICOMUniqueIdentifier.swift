@@ -193,24 +193,39 @@ public struct DICOMUniqueIdentifier: Sendable, Hashable {
     
     /// Indicates whether this appears to be a Transfer Syntax UID
     ///
-    /// Standard DICOM Transfer Syntax UIDs start with "1.2.840.10008.1.2"
+    /// Standard DICOM Transfer Syntax UIDs have the prefix "1.2.840.10008.1.2"
+    /// followed by either end-of-string or a dot.
     /// Reference: DICOM PS3.6 Part 6 - Registry of DICOM Unique Identifiers
     public var isTransferSyntax: Bool {
-        return value.hasPrefix("1.2.840.10008.1.2")
+        // Must match exactly "1.2.840.10008.1.2" or "1.2.840.10008.1.2.x..."
+        let transferSyntaxRoot = "1.2.840.10008.1.2"
+        if value == transferSyntaxRoot {
+            return true
+        }
+        return value.hasPrefix(transferSyntaxRoot + ".")
     }
     
     /// Indicates whether this appears to be a SOP Class UID
     ///
     /// Standard DICOM SOP Class UIDs typically start with "1.2.840.10008.5.1.4"
-    /// or other specific patterns in the 1.2.840.10008.5.x range
+    /// or other specific patterns in the 1.2.840.10008.x range.
     /// Reference: DICOM PS3.6 Part 6 - Registry of DICOM Unique Identifiers
     public var isSOPClass: Bool {
-        return value.hasPrefix("1.2.840.10008.5.1.4") ||
-               value.hasPrefix("1.2.840.10008.3.1.2") ||
-               value.hasPrefix("1.2.840.10008.1.3") ||
-               value.hasPrefix("1.2.840.10008.1.9") ||
-               value.hasPrefix("1.2.840.10008.1.20") ||
-               value.hasPrefix("1.2.840.10008.1.40")
+        // Common SOP Class UID prefixes
+        let sopClassPrefixes = [
+            "1.2.840.10008.5.1.4",   // Storage SOP Classes
+            "1.2.840.10008.3.1.2",   // Query/Retrieve SOP Classes
+            "1.2.840.10008.1.3",     // Basic Film Session SOP Class
+            "1.2.840.10008.1.9",     // Basic Study Content Notification SOP Class
+            "1.2.840.10008.1.40"     // Procedural Event Logging SOP Class
+        ]
+        
+        for prefix in sopClassPrefixes {
+            if value == prefix || value.hasPrefix(prefix + ".") {
+                return true
+            }
+        }
+        return false
     }
     
     /// Returns the DICOM format string (same as value)

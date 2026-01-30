@@ -186,6 +186,11 @@ struct DICOMUniqueIdentifierTests {
         // SOP Class (not transfer syntax)
         let sopClass = DICOMUniqueIdentifier.parse("1.2.840.10008.5.1.4.1.1.2")
         #expect(sopClass?.isTransferSyntax == false)
+        
+        // Potential false positive - UID starting with transfer syntax prefix but different meaning
+        // 1.2.840.10008.1.20 is Storage Commitment SOP Class, NOT a transfer syntax
+        let notTransferSyntax = DICOMUniqueIdentifier.parse("1.2.840.10008.1.20.1")
+        #expect(notTransferSyntax?.isTransferSyntax == false)
     }
     
     @Test("Detect SOP Class UID")
