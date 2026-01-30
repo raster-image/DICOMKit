@@ -26,6 +26,11 @@ public struct DICOMIntegerString: Sendable, Hashable {
     public let originalString: String
     
     /// Creates a DICOM integer string from an Int value
+    ///
+    /// Note: The DICOM standard specifies IS values should be in the range
+    /// -2^31 <= n <= (2^31 - 1). Values outside this range will be accepted
+    /// but `int32Value` will return a clamped result.
+    ///
     /// - Parameter value: The integer value
     public init(value: Int) {
         self.value = value
@@ -100,6 +105,9 @@ public struct DICOMIntegerString: Sendable, Hashable {
     }
     
     /// Returns the value as an Int32
+    ///
+    /// Values created via `parse(_:)` are guaranteed to be within Int32 range.
+    /// Values created directly via `init(value:)` are clamped to Int32 range.
     public var int32Value: Int32 {
         return Int32(clamping: value)
     }
