@@ -125,20 +125,18 @@ public struct TLSConfiguration: Sendable, Hashable {
     /// - Throws: `TLSConfigurationError` if the configuration is invalid
     public func makeNWProtocolTLSOptions() throws -> NWProtocolTLS.Options {
         let options = NWProtocolTLS.Options()
-        
-        // Configure the security protocol options
-        let securityProtocolOptions = sec_protocol_options_create()
+        let secOptions = options.securityProtocolOptions
         
         // Set minimum TLS version
-        sec_protocol_options_set_min_tls_protocol_version(
-            securityProtocolOptions,
+        sec_protocol_options_set_tls_min_version(
+            secOptions,
             minimumVersion.secProtocolVersion
         )
         
         // Set maximum TLS version if specified
         if let maxVersion = maximumVersion {
-            sec_protocol_options_set_max_tls_protocol_version(
-                securityProtocolOptions,
+            sec_protocol_options_set_tls_max_version(
+                secOptions,
                 maxVersion.secProtocolVersion
             )
         }
@@ -152,7 +150,7 @@ public struct TLSConfiguration: Sendable, Hashable {
         case .disabled:
             // Disable certificate verification for development/testing
             sec_protocol_options_set_verify_block(
-                securityProtocolOptions,
+                secOptions,
                 { _, _, completion in
                     // Accept all certificates
                     completion(true)
@@ -162,69 +160,24 @@ public struct TLSConfiguration: Sendable, Hashable {
             
         case .pinned(let pinnedCertificates):
             // Certificate pinning
-            try configurePinnedCertificates(pinnedCertificates, options: securityProtocolOptions)
+            try configurePinnedCertificates(pinnedCertificates, options: secOptions)
             
         case .custom(let trustRoots):
             // Custom trust roots
-            try configureCustomTrustRoots(trustRoots, options: securityProtocolOptions)
+            try configureCustomTrustRoots(trustRoots, options: secOptions)
         }
         
         // Configure ALPN protocols if specified
         for proto in applicationProtocols {
             sec_protocol_options_add_tls_application_protocol(
-                securityProtocolOptions,
+                secOptions,
                 proto
             )
         }
         
         // Configure client identity for mutual TLS
         if let identity = clientIdentity {
-            try configureClientIdentity(identity, options: securityProtocolOptions)
-        }
-        
-        // Apply security protocol options to TLS options
-        sec_protocol_options_set_tls_min_version(
-            options.securityProtocolOptions,
-            minimumVersion.secProtocolVersion
-        )
-        
-        if let maxVersion = maximumVersion {
-            sec_protocol_options_set_tls_max_version(
-                options.securityProtocolOptions,
-                maxVersion.secProtocolVersion
-            )
-        }
-        
-        // Apply certificate validation settings
-        switch certificateValidation {
-        case .system:
-            // Default behavior
-            break
-        case .disabled:
-            sec_protocol_options_set_verify_block(
-                options.securityProtocolOptions,
-                { _, _, completion in
-                    completion(true)
-                },
-                .main
-            )
-        case .pinned(let pinnedCertificates):
-            try configurePinnedCertificatesOnOptions(pinnedCertificates, options: options.securityProtocolOptions)
-        case .custom(let trustRoots):
-            try configureCustomTrustRootsOnOptions(trustRoots, options: options.securityProtocolOptions)
-        }
-        
-        // Apply ALPN protocols
-        for proto in applicationProtocols {
-            sec_protocol_options_add_tls_application_protocol(
-                options.securityProtocolOptions,
-                proto
-            )
-        }
-        
-        // Apply client identity for mutual TLS
-        if let identity = clientIdentity {
-            try applyClientIdentity(identity, options: options.securityProtocolOptions)
+            try configureClientIdentity(identity, options: secOptions)
         }
         
         return options
@@ -242,7 +195,7 @@ public struct TLSConfiguration: Sendable, Hashable {
         
         sec_protocol_options_set_verify_block(
             options,
-            { secProtocolMetadata, secTrust, completion in
+            { _, secTrust, completion in
                 let trust = sec_trust_copy_ref(secTrust).takeRetainedValue()
                 
                 // Get the server certificate
@@ -265,37 +218,6 @@ public struct TLSConfiguration: Sendable, Hashable {
         )
     }
     
-    private func configurePinnedCertificatesOnOptions(
-        _ certificates: [SecCertificate],
-        options: sec_protocol_options_t
-    ) throws {
-        guard !certificates.isEmpty else {
-            throw TLSConfigurationError.noPinnedCertificates
-        }
-        
-        sec_protocol_options_set_verify_block(
-            options,
-            { _, secTrust, completion in
-                let trust = sec_trust_copy_ref(secTrust).takeRetainedValue()
-                
-                guard SecTrustGetCertificateCount(trust) > 0,
-                      let serverCert = SecTrustGetCertificateAtIndex(trust, 0) else {
-                    completion(false)
-                    return
-                }
-                
-                let serverCertData = SecCertificateCopyData(serverCert) as Data
-                let matches = certificates.contains { pinnedCert in
-                    let pinnedCertData = SecCertificateCopyData(pinnedCert) as Data
-                    return serverCertData == pinnedCertData
-                }
-                
-                completion(matches)
-            },
-            .main
-        )
-    }
-    
     private func configureCustomTrustRoots(
         _ trustRoots: [SecCertificate],
         options: sec_protocol_options_t
@@ -306,7 +228,7 @@ public struct TLSConfiguration: Sendable, Hashable {
         
         sec_protocol_options_set_verify_block(
             options,
-            { secProtocolMetadata, secTrust, completion in
+            { _, secTrust, completion in
                 let trust = sec_trust_copy_ref(secTrust).takeRetainedValue()
                 
                 // Set custom anchor certificates
@@ -328,46 +250,7 @@ public struct TLSConfiguration: Sendable, Hashable {
         )
     }
     
-    private func configureCustomTrustRootsOnOptions(
-        _ trustRoots: [SecCertificate],
-        options: sec_protocol_options_t
-    ) throws {
-        guard !trustRoots.isEmpty else {
-            throw TLSConfigurationError.noTrustRoots
-        }
-        
-        sec_protocol_options_set_verify_block(
-            options,
-            { _, secTrust, completion in
-                let trust = sec_trust_copy_ref(secTrust).takeRetainedValue()
-                
-                let status = SecTrustSetAnchorCertificates(trust, trustRoots as CFArray)
-                guard status == errSecSuccess else {
-                    completion(false)
-                    return
-                }
-                
-                SecTrustSetAnchorCertificatesOnly(trust, true)
-                
-                var error: CFError?
-                let trusted = SecTrustEvaluateWithError(trust, &error)
-                completion(trusted)
-            },
-            .main
-        )
-    }
-    
     private func configureClientIdentity(
-        _ identity: ClientIdentity,
-        options: sec_protocol_options_t
-    ) throws {
-        let secIdentity = try identity.makeSecIdentity()
-        if let secIdentityRef = sec_identity_create(secIdentity) {
-            sec_protocol_options_set_local_identity(options, secIdentityRef)
-        }
-    }
-    
-    private func applyClientIdentity(
         _ identity: ClientIdentity,
         options: sec_protocol_options_t
     ) throws {
@@ -607,7 +490,7 @@ public struct ClientIdentity: @unchecked Sendable, Hashable {
         
         guard let itemsArray = items as? [[String: Any]],
               let firstItem = itemsArray.first,
-              let identity = firstItem[kSecImportItemIdentity as String] as! SecIdentity? else {
+              let identity = firstItem[kSecImportItemIdentity as String] as? SecIdentity else {
             throw TLSConfigurationError.pkcs12NoIdentity
         }
         
@@ -628,7 +511,7 @@ public struct ClientIdentity: @unchecked Sendable, Hashable {
             throw TLSConfigurationError.keychainIdentityNotFound(label: label, status: status)
         }
         
-        guard let identity = item as! SecIdentity? else {
+        guard let identity = item as? SecIdentity else {
             throw TLSConfigurationError.keychainIdentityNotFound(label: label, status: errSecItemNotFound)
         }
         
