@@ -1128,7 +1128,7 @@ actor CommitmentSCPAssociation {
     }
     
     private func sendAbort(reason: AbortReason) async throws {
-        let abortPDU = AbortPDU(source: .serviceProvider, reason: reason.rawValue)
+        let abortPDU = AbortPDU(source: .serviceProvider, reason: reason)
         try await send(pdu: abortPDU)
     }
     
