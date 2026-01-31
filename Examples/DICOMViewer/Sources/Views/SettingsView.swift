@@ -10,6 +10,8 @@ struct SettingsView: View {
     @State private var calledAE: String = ""
     @State private var timeout: String = ""
     @State private var useTLS: Bool = false
+    @State private var dicomWebURL: String = ""
+    @State private var wadoURIURL: String = ""
     
     var body: some View {
         Form {
@@ -47,12 +49,32 @@ struct SettingsView: View {
                 Toggle("Use TLS", isOn: $useTLS)
             }
             
+            Section("DICOMweb (Optional)") {
+                TextField("DICOMweb URL", text: $dicomWebURL)
+                    .textContentType(.URL)
+                    #if os(iOS)
+                    .keyboardType(.URL)
+                    .autocapitalization(.none)
+                    #endif
+                
+                TextField("WADO-URI URL", text: $wadoURIURL)
+                    .textContentType(.URL)
+                    #if os(iOS)
+                    .keyboardType(.URL)
+                    .autocapitalization(.none)
+                    #endif
+            }
+            
             Section("Presets") {
-                Button("Load Default Settings") {
+                Button("Load TEAMPACS (Default)") {
                     loadConfiguration(.default)
                 }
                 
-                Button("Load Orthanc Docker Settings") {
+                Button("Load Orthanc Local") {
+                    loadConfiguration(.orthancLocal)
+                }
+                
+                Button("Load Orthanc Docker") {
                     loadConfiguration(.orthancDocker)
                 }
             }
@@ -87,6 +109,8 @@ struct SettingsView: View {
         calledAE = config.calledAETitle
         timeout = String(Int(config.timeout))
         useTLS = config.useTLS
+        dicomWebURL = config.dicomWebURL ?? ""
+        wadoURIURL = config.wadoURIURL ?? ""
     }
     
     private func saveConfiguration() {
@@ -101,7 +125,9 @@ struct SettingsView: View {
             callingAETitle: callingAE,
             calledAETitle: calledAE,
             timeout: timeoutValue,
-            useTLS: useTLS
+            useTLS: useTLS,
+            dicomWebURL: dicomWebURL.isEmpty ? nil : dicomWebURL,
+            wadoURIURL: wadoURIURL.isEmpty ? nil : wadoURIURL
         )
         
         config.save()

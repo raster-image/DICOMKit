@@ -20,14 +20,36 @@ struct PACSConfiguration: Codable, Equatable {
     /// Whether to use TLS encryption
     var useTLS: Bool
     
-    /// Default configuration for local development
+    /// DICOMweb URL (optional, for WADO-RS/STOW-RS/QIDO-RS)
+    var dicomWebURL: String?
+    
+    /// WADO-URI URL (optional, for legacy WADO retrieval)
+    var wadoURIURL: String?
+    
+    /// Default configuration for TEAMPACS server
+    /// Note: The IP address and AE titles are based on the provided PACS configuration.
+    /// These can be modified in the Settings view at runtime.
     static let `default` = PACSConfiguration(
+        host: "117.247.185.219",
+        port: 11112,
+        callingAETitle: "MAYAM",
+        calledAETitle: "TEAMPACS",
+        timeout: 30,
+        useTLS: false,
+        dicomWebURL: nil,
+        wadoURIURL: nil  // Contact your PACS administrator if WADO-URI is supported
+    )
+    
+    /// Configuration for local Orthanc development server
+    static let orthancLocal = PACSConfiguration(
         host: "localhost",
         port: 11112,
         callingAETitle: "DICOM_VIEWER",
         calledAETitle: "ORTHANC",
         timeout: 30,
-        useTLS: false
+        useTLS: false,
+        dicomWebURL: nil,
+        wadoURIURL: nil
     )
     
     /// Configuration for Orthanc running in Docker
@@ -37,7 +59,9 @@ struct PACSConfiguration: Codable, Equatable {
         callingAETitle: "DICOM_VIEWER",
         calledAETitle: "ORTHANC",
         timeout: 30,
-        useTLS: false
+        useTLS: false,
+        dicomWebURL: "http://localhost:8042/dicom-web",
+        wadoURIURL: "http://localhost:8042/wado"
     )
 }
 

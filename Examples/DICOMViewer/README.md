@@ -46,19 +46,27 @@ Note: SwiftUI apps require a GUI environment and cannot be run from the command 
 
 ### PACS Connection Settings
 
-The app uses the following default configuration:
+The app is pre-configured to connect to the TEAMPACS server:
 
 | Setting | Default Value |
 |---------|---------------|
-| Host | localhost |
+| Host | 117.247.185.219 |
 | Port | 11112 |
-| Calling AE | DICOM_VIEWER |
-| Called AE | ORTHANC |
+| Calling AE | MAYAM |
+| Called AE | TEAMPACS |
 | Timeout | 30 seconds |
 
 You can modify these settings in the app's Settings view (⌘, on macOS).
 
-### Using with Orthanc
+### Available Presets
+
+The app includes several preset configurations:
+
+1. **TEAMPACS (Default)** - Production PACS server
+2. **Orthanc Local** - Local Orthanc instance on port 11112
+3. **Orthanc Docker** - Orthanc running in Docker with DICOMweb
+
+### Using with Orthanc (Development)
 
 [Orthanc](https://www.orthanc-server.com/) is a free, open-source DICOM server that's perfect for development and testing.
 
@@ -68,7 +76,7 @@ You can modify these settings in the app's Settings view (⌘, on macOS).
 docker run -p 4242:4242 -p 8042:8042 jodogne/orthanc
 ```
 
-Then update the app settings:
+Then select "Load Orthanc Docker" preset in the app settings:
 - Host: `localhost`
 - Port: `4242`
 - Called AE: `ORTHANC`
