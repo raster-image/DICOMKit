@@ -709,6 +709,7 @@ public enum DICOMRetrieveService {
                 keys: keys,
                 moveDestination: moveDestination,
                 transferSyntax: acceptedTransferSyntax,
+                sopClassUID: configuration.informationModel.moveSOPClassUID,
                 onProgress: onProgress
             )
             
@@ -732,6 +733,7 @@ public enum DICOMRetrieveService {
         keys: RetrieveKeys,
         moveDestination: String,
         transferSyntax: String,
+        sopClassUID: String,
         onProgress: ((RetrieveProgress) -> Void)?
     ) async throws -> RetrieveResult {
         // Build the retrieve identifier data set
@@ -740,9 +742,7 @@ public enum DICOMRetrieveService {
         // Create C-MOVE request
         let request = CMoveRequest(
             messageID: 1,
-            affectedSOPClassUID: association.configuration.calledAETitle.value.isEmpty 
-                ? studyRootQueryRetrieveMoveSOPClassUID 
-                : studyRootQueryRetrieveMoveSOPClassUID,
+            affectedSOPClassUID: sopClassUID,
             moveDestination: moveDestination,
             priority: .medium,
             presentationContextID: presentationContextID
@@ -899,6 +899,7 @@ public enum DICOMRetrieveService {
                         maxPDUSize: negotiated.maxPDUSize,
                         keys: keys,
                         transferSyntax: acceptedTransferSyntax,
+                        sopClassUID: configuration.informationModel.getSOPClassUID,
                         negotiated: negotiated,
                         continuation: continuation
                     )
@@ -924,6 +925,7 @@ public enum DICOMRetrieveService {
         maxPDUSize: UInt32,
         keys: RetrieveKeys,
         transferSyntax: String,
+        sopClassUID: String,
         negotiated: NegotiatedAssociation,
         continuation: AsyncStream<GetEvent>.Continuation
     ) async throws {
@@ -933,7 +935,7 @@ public enum DICOMRetrieveService {
         // Create C-GET request
         let request = CGetRequest(
             messageID: 1,
-            affectedSOPClassUID: studyRootQueryRetrieveGetSOPClassUID,
+            affectedSOPClassUID: sopClassUID,
             priority: .medium,
             presentationContextID: presentationContextID
         )
