@@ -10,9 +10,18 @@ A pure Swift DICOM toolkit for Apple platforms (iOS, macOS, visionOS)
 
 DICOMKit is a modern, Swift-native library for reading, writing, and parsing DICOM (Digital Imaging and Communications in Medicine) files. Built with Swift 6 strict concurrency and value semantics, it provides a type-safe, efficient interface for working with medical imaging data on Apple platforms.
 
-## Features (v0.6)
+## Features (v0.8)
 
-- ✅ **DICOM Networking (NEW in v0.6)**
+- ✅ **DICOMweb Services (NEW in v0.8)**
+  - ✅ WADO-RS for retrieving studies, series, instances, and metadata
+  - ✅ STOW-RS for storing DICOM instances over HTTP
+  - ✅ QIDO-RS for searching studies, series, and instances
+  - ✅ UPS-RS for Unified Procedure Step management
+  - ✅ Multipart MIME encoding and decoding
+  - ✅ DICOM JSON model support
+  - ✅ Thumbnail retrieval
+  - ✅ OAuth2/OpenID Connect and multiple authentication methods
+- ✅ **DICOM Networking (v0.6)**
   - ✅ C-ECHO verification service for connectivity testing
   - ✅ C-FIND query service for finding studies, series, and instances
   - ✅ C-MOVE retrieve service for moving images to a destination AE
@@ -65,7 +74,7 @@ DICOMKit is a modern, Swift-native library for reading, writing, and parsing DIC
 - ✅ **DICOM 2025e compliant** - Based on latest DICOM standard
 - ✅ **Apple Silicon optimized** - Native performance on M-series chips
 
-## Limitations (v0.6)
+## Limitations (v0.8)
 
 - ⚠️ **Limited networking** - C-ECHO, C-FIND, C-MOVE, and C-GET implemented; C-STORE not yet available
 - ❌ **No character set conversion** - UTF-8 only
@@ -541,9 +550,150 @@ for await event in instanceStream {
 }
 ```
 
+### DICOMweb - WADO-RS (v0.8)
+
+```swift
+import DICOMWeb
+
+// Create a DICOMweb client
+let client = DICOMWebClient(
+    baseURL: URL(string: "https://pacs.hospital.com/dicomweb")!,
+    authentication: .bearer(token: "your-token")
+)
+
+// Retrieve all instances in a study
+let instances = try await client.wado.retrieveStudy(
+    studyInstanceUID: "1.2.3.4.5.6.7.8.9"
+)
+
+// Retrieve metadata only
+let metadata = try await client.wado.retrieveStudyMetadata(
+    studyInstanceUID: "1.2.3.4.5.6.7.8.9"
+)
+
+// Retrieve a specific instance
+let instance = try await client.wado.retrieveInstance(
+    studyInstanceUID: "1.2.3.4.5.6.7.8.9",
+    seriesInstanceUID: "1.2.3.4.5.6.7.8.9.10",
+    sopInstanceUID: "1.2.3.4.5.6.7.8.9.10.11"
+)
+
+// Retrieve a rendered frame as JPEG
+let renderedImage = try await client.wado.retrieveRenderedFrame(
+    studyInstanceUID: "1.2.3.4.5.6.7.8.9",
+    seriesInstanceUID: "1.2.3.4.5.6.7.8.9.10",
+    sopInstanceUID: "1.2.3.4.5.6.7.8.9.10.11",
+    frameNumber: 1,
+    viewport: Viewport(width: 512, height: 512),
+    windowCenter: 40.0,
+    windowWidth: 400.0
+)
+
+// Retrieve a thumbnail
+let thumbnail = try await client.wado.retrieveThumbnail(
+    studyInstanceUID: "1.2.3.4.5.6.7.8.9",
+    seriesInstanceUID: "1.2.3.4.5.6.7.8.9.10",
+    sopInstanceUID: "1.2.3.4.5.6.7.8.9.10.11",
+    viewport: Viewport(width: 128, height: 128)
+)
+```
+
+### DICOMweb - QIDO-RS (v0.8)
+
+```swift
+import DICOMWeb
+
+// Search for studies
+let studies = try await client.qido.searchStudies(
+    patientName: "DOE^JOHN*",
+    studyDate: "20240101-20241231",
+    modality: "CT"
+)
+
+for study in studies {
+    print("Study: \(study.studyInstanceUID)")
+    print("  Date: \(study.studyDate ?? "N/A")")
+    print("  Description: \(study.studyDescription ?? "N/A")")
+    print("  Patient: \(study.patientName ?? "N/A")")
+    print("  Modalities: \(study.modalitiesInStudy ?? [])")
+}
+
+// Search for series within a study
+let series = try await client.qido.searchSeries(
+    studyInstanceUID: "1.2.3.4.5.6.7.8.9",
+    modality: "CT"
+)
+
+// Search for instances with pagination
+let instances = try await client.qido.searchAllInstances(
+    sopClassUID: "1.2.840.10008.5.1.4.1.1.2",
+    options: QIDORequestOptions(limit: 50, offset: 0)
+)
+```
+
+### DICOMweb - STOW-RS (v0.8)
+
+```swift
+import DICOMWeb
+
+// Store DICOM instances
+let dicomData1 = try Data(contentsOf: file1URL)
+let dicomData2 = try Data(contentsOf: file2URL)
+
+let result = try await client.stow.store(
+    instances: [dicomData1, dicomData2],
+    studyInstanceUID: "1.2.3.4.5.6.7.8.9"
+)
+
+print("Stored: \(result.successfulInstances.count)")
+print("Failed: \(result.failedInstances.count)")
+
+if result.hasPartialFailure {
+    for failed in result.failedInstances {
+        print("Failed: \(failed.sopInstanceUID) - \(failed.failureReasonDescription)")
+    }
+}
+```
+
+### DICOMweb - UPS-RS (v0.8)
+
+```swift
+import DICOMWeb
+
+// Create a workitem
+let workitemUID = try await client.ups.createWorkitem(
+    UPSWorkitem(
+        status: .scheduled,
+        procedureStepLabel: "CT Scan Review",
+        scheduledStationName: "REVIEW_WS_1",
+        scheduledProcedureStepPriority: .high,
+        patientName: "Doe^John",
+        patientID: "P001"
+    )
+)
+
+// Search for workitems
+let workitems = try await client.ups.searchWorkitems(
+    status: .scheduled,
+    scheduledStationName: "REVIEW_WS_1"
+)
+
+// Claim a workitem
+let transactionUID = try await client.ups.claimWorkitem(workitemUID: workitemUID)
+
+// Complete a workitem
+try await client.ups.completeWorkitem(
+    workitemUID: workitemUID,
+    transactionUID: transactionUID
+)
+
+// Subscribe to workitem events
+let subscriptionUID = try await client.ups.subscribe(workitemUID: workitemUID)
+```
+
 ## Architecture
 
-DICOMKit is organized into three modules:
+DICOMKit is organized into five modules:
 
 ### DICOMCore
 Core data types and utilities:
@@ -577,7 +727,7 @@ Standard DICOM dictionaries:
 - `UIDDictionary` - Transfer Syntax and SOP Class UIDs
 - Dictionary entry types
 
-### DICOMNetwork (NEW in v0.6)
+### DICOMNetwork (v0.6)
 DICOM network protocol implementation:
 - `DICOMVerificationService` - C-ECHO SCU for connectivity testing
 - `DICOMQueryService` - C-FIND SCU for querying PACS
@@ -591,6 +741,20 @@ DICOM network protocol implementation:
 - `Association` - DICOM Association management
 - `CommandSet`, `PresentationContext` - Low-level protocol types
 - `DIMSEMessages` - DIMSE-C message types (C-ECHO, C-FIND, C-STORE, C-MOVE, C-GET)
+
+### DICOMWeb (NEW in v0.8)
+RESTful DICOM web services implementation:
+- `DICOMWebClient` - Main client for all DICOMweb operations
+- `WADOService` - WADO-RS for retrieving DICOM objects over HTTP
+- `QIDOService` - QIDO-RS for searching DICOM objects
+- `STOWService` - STOW-RS for storing DICOM objects
+- `UPSService` - UPS-RS for Unified Procedure Step management
+- `MultipartHandler` - Multipart MIME encoding/decoding
+- `DICOMJSONModel` - DICOM JSON metadata parsing
+- `DICOMWebConfiguration` - Client configuration with authentication
+- `QIDOStudyResult`, `QIDOSeriesResult`, `QIDOInstanceResult` - Search results
+- `STOWResult`, `STOWInstanceResult`, `STOWFailedInstance` - Store results
+- `UPSWorkitem`, `UPSStatus`, `UPSPriority` - UPS types
 
 ### DICOMKit
 High-level API:
@@ -607,6 +771,7 @@ DICOMKit implements:
 - **DICOM PS3.7 2025e** - Message Exchange (DIMSE-C services)
 - **DICOM PS3.8 2025e** - Network Communication Support (Upper Layer Protocol)
 - **DICOM PS3.10 2025e** - Media Storage and File Format
+- **DICOM PS3.18 2025e** - Web Services (DICOMweb)
 
 All parsing behavior is documented with PS3.5 section references. We do not translate implementations from other toolkits (DCMTK, pydicom, fo-dicom) - all behavior is derived directly from the DICOM standard.
 
@@ -624,4 +789,4 @@ This library implements the DICOM standard as published by the National Electric
 
 ---
 
-**Note**: This is v0.6 - adding comprehensive DICOM networking support including C-ECHO verification, C-FIND query, C-MOVE and C-GET retrieve services. Future versions will add C-STORE for sending images and advanced networking features. See [MILESTONES.md](MILESTONES.md) for the development roadmap.
+**Note**: This is v0.8 - adding comprehensive DICOMweb support including WADO-RS, QIDO-RS, STOW-RS, and UPS-RS services. See [MILESTONES.md](MILESTONES.md) for the development roadmap.
