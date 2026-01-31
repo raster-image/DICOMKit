@@ -25,6 +25,11 @@ let package = Package(
         .library(
             name: "DICOMNetwork",
             targets: ["DICOMNetwork"]
+        ),
+        // Example DICOM Viewer application
+        .executable(
+            name: "DICOMViewer",
+            targets: ["DICOMViewer"]
         )
     ],
     targets: [
@@ -51,6 +56,15 @@ let package = Package(
         .target(
             name: "DICOMKit",
             dependencies: ["DICOMCore", "DICOMDictionary"],
+            swiftSettings: [
+                .enableUpcomingFeature("StrictConcurrency")
+            ]
+        ),
+        // Example DICOM Viewer Application
+        .executableTarget(
+            name: "DICOMViewer",
+            dependencies: ["DICOMKit", "DICOMNetwork", "DICOMCore"],
+            path: "Examples/DICOMViewer/Sources",
             swiftSettings: [
                 .enableUpcomingFeature("StrictConcurrency")
             ]

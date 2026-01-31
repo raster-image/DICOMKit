@@ -168,6 +168,22 @@ Or add it through Xcode:
 2. Enter: `https://github.com/raster-image/DICOMKit`
 3. Select version 0.5.0 or later
 
+## Example Application
+
+The repository includes a complete **DICOM Viewer** example application in the `Examples/DICOMViewer` directory. This SwiftUI app demonstrates:
+
+- Connecting to a PACS server (C-ECHO)
+- Browsing studies and series (C-FIND)
+- Retrieving images (C-GET)
+- Displaying DICOM images with window/level adjustments
+
+To run the example:
+1. Open the package in Xcode: `open Package.swift`
+2. Select the `DICOMViewer` scheme
+3. Build and run
+
+See [Examples/DICOMViewer/README.md](Examples/DICOMViewer/README.md) for detailed documentation.
+
 ## Quick Start
 
 ```swift
