@@ -540,6 +540,9 @@ public actor StoreAndForwardQueue {
     /// Task for monitoring connectivity
     private var connectivityTask: Task<Void, Never>?
     
+    /// Tasks for auto-removal of completed items
+    private var autoRemovalTasks: [UUID: Task<Void, Never>] = [:]
+    
     /// Flag indicating if we have connectivity
     private var hasConnectivity: Bool = true
     
@@ -615,6 +618,12 @@ public actor StoreAndForwardQueue {
         // Cancel connectivity monitoring
         connectivityTask?.cancel()
         connectivityTask = nil
+        
+        // Cancel all auto-removal tasks
+        for (_, task) in autoRemovalTasks {
+            task.cancel()
+        }
+        autoRemovalTasks.removeAll()
         
         // Save state
         await saveQueue()
@@ -695,7 +704,7 @@ public actor StoreAndForwardQueue {
         let fileInfo = try parser.parseForStorage()
         
         // Create queue item
-        var item = QueuedStoreItem(
+        let item = QueuedStoreItem(
             sopClassUID: fileInfo.sopClassUID,
             sopInstanceUID: fileInfo.sopInstanceUID,
             transferSyntaxUID: fileInfo.transferSyntaxUID,
@@ -769,7 +778,7 @@ public actor StoreAndForwardQueue {
         }
         
         // Create queue item
-        var item = QueuedStoreItem(
+        let item = QueuedStoreItem(
             sopClassUID: sopClassUID,
             sopInstanceUID: sopInstanceUID,
             transferSyntaxUID: transferSyntaxUID,
@@ -1090,11 +1099,15 @@ public actor StoreAndForwardQueue {
             // Start processing the item
             activeTransfers += 1
             
-            Task {
-                await processItem(nextItem)
-                activeTransfers -= 1
+            Task { [self] in
+                await self.processItemAndDecrementTransfers(nextItem)
             }
         }
+    }
+    
+    private func processItemAndDecrementTransfers(_ item: QueuedStoreItem) async {
+        await processItem(item)
+        activeTransfers -= 1
     }
     
     private func getNextItemToProcess() -> QueuedStoreItem? {
@@ -1194,10 +1207,14 @@ public actor StoreAndForwardQueue {
         
         // Auto-remove if configured
         if configuration.autoRemoveCompleted {
-            Task {
+            let itemId = id
+            let task = Task { [self] in
                 try? await Task.sleep(nanoseconds: UInt64(configuration.completedRetentionDuration * 1_000_000_000))
-                try? await remove(itemId: id)
+                guard !Task.isCancelled else { return }
+                try? await self.remove(itemId: itemId)
+                self.autoRemovalTasks.removeValue(forKey: itemId)
             }
+            autoRemovalTasks[id] = task
         }
         
         await saveQueue()
