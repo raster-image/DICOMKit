@@ -312,18 +312,32 @@ struct TransferSyntaxConverterTests {
         }
     }
     
-    @Test("Transcode throws when lossy not allowed")
-    func testTranscodeThrowsWhenLossyNotAllowed() {
+    @Test("Transcoding configuration respects lossy constraint")
+    func testTranscodingConfigRespectsLossyConstraint() {
+        // Verify that configurations with allowLossyCompression=false
+        // correctly filter out lossy transfer syntaxes
         let config = TranscodingConfiguration(
-            preferredSyntaxes: [.explicitVRLittleEndian],
+            preferredSyntaxes: [.jpegBaseline, .jpeg2000, .explicitVRLittleEndian],
             allowLossyCompression: false,
             preservePixelDataFidelity: true
         )
         let converter = TransferSyntaxConverter(configuration: config)
         
-        // Note: Currently we don't have a case where this would throw
-        // since we can't encode to lossy syntaxes yet
-        // This test documents the expected behavior
+        // When selecting a target syntax, lossy syntaxes should be skipped
+        let accepted = [
+            TransferSyntax.jpegBaseline.uid,
+            TransferSyntax.explicitVRLittleEndian.uid
+        ]
+        
+        let target = converter.selectTargetSyntax(
+            for: Data(),
+            sourceSyntax: .implicitVRLittleEndian,
+            acceptedSyntaxes: accepted
+        )
+        
+        // Should select Explicit VR LE because JPEG Baseline is lossy
+        #expect(target?.uid == TransferSyntax.explicitVRLittleEndian.uid)
+        #expect(target?.isLossless == true)
     }
     
     // MARK: - Uncompressed Transcoding Tests

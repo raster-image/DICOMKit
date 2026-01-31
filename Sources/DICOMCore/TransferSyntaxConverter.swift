@@ -520,7 +520,13 @@ public struct TransferSyntaxConverter: Sendable {
         // Read value data
         let intLength = Int(length)
         guard offset + intLength <= data.count else {
-            // Handle truncated data
+            // Handle truncated data gracefully
+            // This can occur when parsing partial data or when the source file was truncated.
+            // We read what's available to allow processing to continue, which is acceptable
+            // for transcoding scenarios where the goal is to convert existing (possibly
+            // partial) data rather than strictly validate completeness.
+            // The caller can detect truncation by comparing the returned element's length
+            // with the original length if strict validation is needed.
             let availableLength = data.count - offset
             let valueData = data.subdata(in: offset..<offset+availableLength)
             offset = data.count
@@ -642,7 +648,14 @@ public struct TransferSyntaxConverter: Sendable {
                 // First item is the basic offset table
                 isFirstItem = false
                 // Parse offset table (UInt32 values)
-                for i in stride(from: 0, to: fragmentData.count, by: 4) {
+                // Per DICOM PS3.5 A.4, the offset table may be empty (0 length)
+                // or contain one offset per frame. We parse what's available.
+                if fragmentData.count % 4 != 0 && fragmentData.count > 0 {
+                    // Offset table should be a multiple of 4 bytes (UInt32 values)
+                    // A malformed table may indicate corrupted data, but we continue
+                    // to allow best-effort processing of the pixel data fragments
+                }
+                for i in stride(from: 0, to: fragmentData.count - 3, by: 4) {
                     if let value = fragmentData.readUInt32LE(at: i) {
                         offsetTable.append(value)
                     }
@@ -819,8 +832,21 @@ public struct TransferSyntaxConverter: Sendable {
     /// Infers the VR for common tags when parsing Implicit VR data
     ///
     /// Since DICOMCore doesn't have access to the full Data Element Dictionary,
-    /// this function provides VR inference for commonly used tags.
+    /// this function provides VR inference for commonly used tags only.
     /// For unknown tags, returns UN (Unknown) per DICOM PS3.5 Section 6.2.2.
+    ///
+    /// - Important: This is a limited implementation that only covers standard DICOM tags
+    ///   commonly used in medical imaging workflows. Private tags and less common
+    ///   standard tags will be assigned VR=UN, which may result in incorrect
+    ///   interpretation of string vs. numeric data. For full VR support, use the
+    ///   DICOMParser from DICOMKit which has access to the complete Data Element Dictionary.
+    ///
+    /// - Note: When transcoding Implicit VR data with non-standard tags, the resulting
+    ///   Explicit VR output will use UN VR for unknown tags, which is valid DICOM
+    ///   but may not preserve the original semantic meaning.
+    ///
+    /// - Parameter tag: The DICOM tag to infer VR for
+    /// - Returns: The inferred VR, or UN if the tag is not recognized
     private func inferVRForTag(_ tag: Tag) -> VR {
         // File Meta Information (Group 0002) - always Explicit VR, but handle anyway
         switch tag {
