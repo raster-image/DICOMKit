@@ -26,6 +26,1066 @@ This approach allows the application to be immediately useful in clinical workfl
 
 ---
 
+# 📅 GRANULAR DEVELOPMENT TIMELINE
+
+This section provides a detailed, week-by-week breakdown of development tasks with daily deliverables, checkpoints, and dependencies.
+
+## Sprint Overview (20-Week Plan)
+
+| Sprint | Weeks | Focus Area | Key Milestone |
+|--------|-------|------------|---------------|
+| Sprint 1 | 1-2 | Project Foundation | ✅ App skeleton running on all platforms |
+| Sprint 2 | 3-4 | PACS Server Config | ✅ Can configure and save PACS servers |
+| Sprint 3 | 5-6 | Patient Query | ✅ Can search patients from PACS |
+| Sprint 4 | 7-8 | Hierarchy Navigation | ✅ Patient → Study → Series drill-down |
+| Sprint 5 | 9-10 | Image Retrieval | ✅ Can download images via C-GET |
+| Sprint 6 | 11-12 | Image Display | ✅ Basic DICOM image rendering |
+| Sprint 7 | 13-14 | Image Manipulation | ✅ Window/level, pan, zoom working |
+| Sprint 8 | 15-16 | Advanced Features | ✅ Measurements and tag browser |
+| Sprint 9 | 17-18 | Study Management | ✅ Local database and organization |
+| Sprint 10 | 19-20 | Polish & Release | ✅ Production-ready application |
+
+---
+
+## 🚀 Sprint 1: Project Foundation (Weeks 1-2)
+
+### Week 1: Project Setup & Architecture
+
+#### Day 1-2: Xcode Project Creation
+- [ ] Create new SwiftUI App project named "DICOMViewer"
+- [ ] Configure deployment targets: iOS 17+, macOS 14+, visionOS 1.0+
+- [ ] Set up Git repository with .gitignore for Xcode
+- [ ] Create initial README.md with project description
+
+**Checkpoint**: Empty app runs on iPhone Simulator, macOS, and visionOS Simulator
+
+#### Day 3: Package Dependencies
+- [ ] Add DICOMKit package dependency
+- [ ] Verify all modules import correctly:
+  ```swift
+  import DICOMKit
+  import DICOMCore
+  import DICOMNetwork
+  ```
+- [ ] Create test view that displays DICOMKit version
+
+**Checkpoint**: App compiles with DICOMKit imported
+
+#### Day 4-5: Directory Structure
+- [ ] Create folder structure:
+  ```
+  DICOMViewer/
+  ├── App/
+  ├── Models/
+  ├── Views/
+  ├── ViewModels/
+  ├── Services/
+  └── Resources/
+  ```
+- [ ] Create placeholder files for each module
+- [ ] Set up SwiftLint configuration (optional)
+
+**Checkpoint**: Project structure matches architecture plan
+
+### Week 2: Core Architecture Implementation
+
+#### Day 6-7: App State Management
+- [ ] Create `AppState.swift` with @Observable macro
+- [ ] Define app navigation states:
+  ```swift
+  enum AppScreen {
+      case serverList
+      case patientSearch
+      case studyList
+      case imageViewer
+  }
+  ```
+- [ ] Implement basic NavigationStack structure
+
+**Checkpoint**: Navigation between placeholder screens works
+
+#### Day 8-9: Model Layer Foundation
+- [ ] Create `PACSServer.swift` model with Codable
+- [ ] Create `PatientSearchCriteria.swift` model
+- [ ] Create `QueryResultModels.swift` with:
+  - `PatientDisplayModel`
+  - `StudyDisplayModel`
+  - `SeriesDisplayModel`
+- [ ] Add unit tests for model serialization
+
+**Checkpoint**: All models serialize/deserialize correctly
+
+#### Day 10: Service Layer Stubs
+- [ ] Create `PACSQueryService.swift` with stub methods
+- [ ] Create `ConnectionTestService.swift` with stub methods
+- [ ] Create `ServerStorageService.swift` with UserDefaults persistence
+- [ ] Write unit tests for ServerStorageService
+
+**Checkpoint**: Services compile; storage service persists data
+
+### Sprint 1 Exit Criteria
+- [ ] App runs on all three platforms (iOS, macOS, visionOS)
+- [ ] Navigation structure in place
+- [ ] All model classes defined with tests
+- [ ] Service stubs ready for implementation
+- [ ] Code compiles without warnings
+
+---
+
+## 🔌 Sprint 2: PACS Server Configuration (Weeks 3-4)
+
+### Week 3: Server Configuration UI
+
+#### Day 11-12: Server List View
+- [ ] Create `ServerListView.swift` showing saved servers
+- [ ] Implement add/edit/delete server functionality
+- [ ] Create server row component with:
+  - Server name
+  - Host:Port display
+  - Connection status indicator
+- [ ] Add empty state for no servers configured
+
+**Checkpoint**: Can view list of saved servers (initially empty)
+
+#### Day 13-14: Server Configuration Form
+- [ ] Create `ServerConfigView.swift` form with fields:
+  - Server name (TextField)
+  - Host address (TextField with URL validation)
+  - Port number (TextField with number validation)
+  - Called AE Title (TextField, max 16 chars, uppercase)
+  - Calling AE Title (TextField, max 16 chars, uppercase)
+  - Use TLS toggle (Toggle)
+- [ ] Add form validation with error messages
+- [ ] Implement save/cancel actions
+
+**Checkpoint**: Can add new server configuration
+
+#### Day 15: Server Persistence
+- [ ] Implement `ServerStorageService` with UserDefaults
+- [ ] Add Keychain storage for sensitive data (optional)
+- [ ] Support multiple server profiles
+- [ ] Add default server option
+- [ ] Write integration tests
+
+**Checkpoint**: Servers persist across app restarts
+
+### Week 4: Connection Testing
+
+#### Day 16-17: C-ECHO Implementation
+- [ ] Implement `ConnectionTestService.testConnection()`:
+  ```swift
+  func testConnection(to server: PACSServer) async throws -> ConnectionResult {
+      let config = try DICOMClientConfiguration(
+          host: server.host,
+          port: server.port,
+          callingAE: server.callingAETitle,
+          calledAE: server.calledAETitle
+      )
+      let client = DICOMClient(configuration: config)
+      let result = try await client.verify()
+      return ConnectionResult(
+          success: result.success,
+          responseTime: result.responseTime,
+          errorMessage: result.errorMessage
+      )
+  }
+  ```
+- [ ] Create `ConnectionResult` model with status details
+
+**Checkpoint**: Can execute C-ECHO against test PACS
+
+#### Day 18-19: Connection Test UI
+- [ ] Add "Test Connection" button to server config
+- [ ] Show loading indicator during test
+- [ ] Display success/failure with response time
+- [ ] Show detailed error messages for failures:
+  - Connection refused
+  - Timeout
+  - AE title rejected
+  - TLS errors
+- [ ] Add retry button on failure
+
+**Checkpoint**: Visual feedback for connection test results
+
+#### Day 20: Error Handling
+- [ ] Implement categorized error handling:
+  ```swift
+  enum PACSConnectionError: LocalizedError {
+      case connectionRefused(host: String, port: UInt16)
+      case timeout(seconds: Int)
+      case aeRejected(aeTitle: String)
+      case tlsError(underlying: Error)
+      case unknown(Error)
+  }
+  ```
+- [ ] Add user-friendly error messages
+- [ ] Implement recovery suggestions
+- [ ] Add error logging for debugging
+
+**Checkpoint**: All error scenarios handled gracefully
+
+### Sprint 2 Exit Criteria
+- [ ] Can add/edit/delete PACS server configurations
+- [ ] Server configs persist across restarts
+- [ ] C-ECHO test works against real PACS
+- [ ] Clear error messages for connection failures
+- [ ] Form validation prevents invalid input
+
+---
+
+## 🔍 Sprint 3: Patient Query (Weeks 5-6)
+
+### Week 5: Patient Search Implementation
+
+#### Day 21-22: Search Form UI
+- [ ] Create `PatientSearchView.swift` with fields:
+  - Patient Name (with wildcard hint: "SMITH*")
+  - Patient ID
+  - Birth Date range (From/To date pickers)
+  - Sex filter (Any/Male/Female/Other)
+- [ ] Add search button and clear button
+- [ ] Show selected server name
+- [ ] Add quick filter chips (Today, This Week, This Month)
+
+**Checkpoint**: Search form UI complete and usable
+
+#### Day 23-24: C-FIND Patient Query
+- [ ] Implement `PACSQueryService.findPatients()`:
+  ```swift
+  func findPatients(
+      on server: PACSServer,
+      matching criteria: PatientSearchCriteria
+  ) async throws -> [PatientResult] {
+      var queryKeys = QueryKeys(level: .patient)
+          .requestPatientName()
+          .requestPatientID()
+          .requestPatientBirthDate()
+          .requestPatientSex()
+          .requestNumberOfPatientRelatedStudies()
+      
+      if !criteria.patientName.isEmpty {
+          queryKeys = queryKeys.patientName(criteria.patientName)
+      }
+      // ... add other criteria
+      
+      // Use DICOMQueryService.find for generic queries at any level
+      let results = try await DICOMQueryService.find(
+          host: server.host,
+          port: server.port,
+          configuration: config,
+          queryKeys: queryKeys
+      )
+      return results.map { $0.toPatientResult() }
+  }
+  ```
+- [ ] Handle wildcard queries (* and ?)
+- [ ] Handle date range formatting (YYYYMMDD-YYYYMMDD)
+
+**Checkpoint**: Patient queries return results from PACS
+
+#### Day 25: Search Results Display
+- [ ] Create `PatientListView.swift` with:
+  - Patient name (formatted: Last, First)
+  - Patient ID
+  - Birth date (formatted)
+  - Sex
+  - Number of studies badge
+- [ ] Add pull-to-refresh
+- [ ] Add loading indicator
+- [ ] Handle empty results state
+
+**Checkpoint**: Search results display correctly
+
+### Week 6: Search Enhancements
+
+#### Day 26-27: Patient Row Details
+- [ ] Create `PatientRowView.swift` component
+- [ ] Add patient age calculation
+- [ ] Show study count if available
+- [ ] Add selection state
+- [ ] Implement swipe actions (iOS)
+- [ ] Add context menu (macOS)
+
+**Checkpoint**: Patient rows show all relevant info
+
+#### Day 28-29: Search History & Favorites
+- [ ] Implement recent searches list
+- [ ] Add favorite patients feature
+- [ ] Store search history locally
+- [ ] Quick recall of previous searches
+- [ ] Clear history option
+
+**Checkpoint**: Search history persists and recalls
+
+#### Day 30: Performance & Polish
+- [ ] Add search debouncing (300ms delay)
+- [ ] Implement result caching
+- [ ] Add keyboard shortcuts (macOS):
+  - ⌘F: Focus search field
+  - ⌘R: Refresh results
+  - ↵: Select first result
+- [ ] Add VoiceOver accessibility labels
+
+**Checkpoint**: Search feels responsive and polished
+
+### Sprint 3 Exit Criteria
+- [ ] Can search patients by name (with wildcards)
+- [ ] Can search patients by ID
+- [ ] Can filter by birth date range
+- [ ] Results display within 2 seconds
+- [ ] Search history works
+- [ ] Accessibility verified
+
+---
+
+## 📊 Sprint 4: Hierarchy Navigation (Weeks 7-8)
+
+### Week 7: Study Query
+
+#### Day 31-32: Study List View
+- [ ] Create `StudyListView.swift` for selected patient
+- [ ] Display study fields:
+  - Study Date/Time
+  - Study Description
+  - Accession Number
+  - Modalities in Study
+  - Number of Series
+  - Number of Images
+- [ ] Add sorting options (Date, Modality)
+- [ ] Add filtering by modality
+
+**Checkpoint**: Study list displays for selected patient
+
+#### Day 33-34: Study Query Implementation
+- [ ] Implement `PACSQueryService.findStudies()`:
+  ```swift
+  func findStudies(
+      on server: PACSServer,
+      forPatientID patientID: String,
+      dateRange: String? = nil,
+      modality: String? = nil
+  ) async throws -> [StudyResult] {
+      var queryKeys = QueryKeys(level: .study)
+          .patientID(patientID)
+          .requestStudyInstanceUID()
+          .requestStudyDate()
+          .requestStudyDescription()
+          .requestModalitiesInStudy()
+          .requestNumberOfStudyRelatedSeries()
+      
+      // Use convenience method for study-level queries
+      return try await DICOMQueryService.findStudies(
+          host: server.host,
+          port: server.port,
+          callingAE: server.callingAETitle,
+          calledAE: server.calledAETitle,
+          matching: queryKeys
+      )
+  }
+  ```
+
+**Checkpoint**: Study queries work correctly
+
+#### Day 35: Study Row Component
+- [ ] Create `StudyRowView.swift` with:
+  - Modality icon/badge
+  - Study date formatted
+  - Description (truncated if long)
+  - Series/Image counts
+  - Chevron indicator
+- [ ] Add expandable details section
+- [ ] Show referring physician if available
+
+**Checkpoint**: Study rows display all metadata
+
+### Week 8: Series Query
+
+#### Day 36-37: Series List View
+- [ ] Create `SeriesListView.swift` for selected study
+- [ ] Display series fields:
+  - Series Number
+  - Series Description
+  - Modality
+  - Body Part Examined
+  - Number of Instances
+- [ ] Add series thumbnail (placeholder for now)
+- [ ] Group by modality option
+
+**Checkpoint**: Series list displays for selected study
+
+#### Day 38-39: Series Query Implementation
+- [ ] Implement `PACSQueryService.findSeries()`:
+  ```swift
+  func findSeries(
+      on server: PACSServer,
+      forStudyUID studyUID: String,
+      modality: String? = nil
+  ) async throws -> [SeriesResult] {
+      var queryKeys = QueryKeys(level: .series)
+      if let modality = modality {
+          queryKeys = queryKeys.modality(modality)
+      }
+      
+      // Use convenience method for series-level queries
+      return try await DICOMQueryService.findSeries(
+          host: server.host,
+          port: server.port,
+          callingAE: server.callingAETitle,
+          calledAE: server.calledAETitle,
+          forStudy: studyUID,
+          matching: queryKeys
+      )
+  }
+  ```
+
+**Checkpoint**: Series queries work correctly
+
+#### Day 40: Navigation Integration
+- [ ] Implement full navigation flow:
+  Patient List → Study List → Series List
+- [ ] Add breadcrumb navigation
+- [ ] Implement back navigation
+- [ ] Add "Jump to Patient" from deep levels
+- [ ] Test navigation on all platforms
+
+**Checkpoint**: Full drill-down navigation working
+
+### Sprint 4 Exit Criteria
+- [ ] Can navigate Patient → Studies → Series
+- [ ] All hierarchy levels query correctly
+- [ ] Navigation works on all platforms
+- [ ] Loading states for each level
+- [ ] Error handling at each level
+
+---
+
+## ⬇️ Sprint 5: Image Retrieval (Weeks 9-10)
+
+### Week 9: C-GET Implementation
+
+#### Day 41-42: Retrieve Service
+- [ ] Create `PACSRetrieveService.swift`:
+  ```swift
+  actor PACSRetrieveService {
+      func retrieveSeries(
+          from server: PACSServer,
+          studyUID: String,
+          seriesUID: String,
+          onProgress: @escaping (RetrieveProgress) -> Void,
+          onImageReceived: @escaping (Data) -> Void
+      ) async throws -> RetrieveResult
+  }
+  ```
+- [ ] Implement C-GET with progress tracking
+- [ ] Handle multi-instance retrieval
+- [ ] Add cancellation support
+
+**Checkpoint**: Can retrieve series via C-GET
+
+#### Day 43-44: Progress UI
+- [ ] Create `RetrieveProgressView.swift`:
+  - Progress bar (completed/total)
+  - Current image count
+  - Failed count (if any)
+  - Cancel button
+  - Estimated time remaining
+- [ ] Integrate with series row
+- [ ] Show inline progress in series list
+
+**Checkpoint**: Visual progress feedback during retrieval
+
+#### Day 45: Error Recovery
+- [ ] Handle partial retrieval failures
+- [ ] Implement retry for failed instances
+- [ ] Show which images failed
+- [ ] Allow retry of failed images only
+- [ ] Log detailed error information
+
+**Checkpoint**: Robust error handling during retrieval
+
+### Week 10: Local Storage
+
+#### Day 46-47: Image Storage
+- [ ] Create `LocalStorageService.swift`:
+  ```swift
+  actor LocalStorageService {
+      func saveImage(_ data: Data, 
+                     sopInstanceUID: String,
+                     seriesUID: String,
+                     studyUID: String) async throws -> URL
+      
+      func getImage(sopInstanceUID: String) async throws -> Data?
+      
+      func deleteStudy(studyUID: String) async throws
+  }
+  ```
+- [ ] Organize by Study/Series/Instance hierarchy
+- [ ] Handle disk space management
+
+**Checkpoint**: Images persist to local storage
+
+#### Day 48-49: Retrieval Queue
+- [ ] Create `RetrieveQueueManager.swift`:
+  - Queue multiple series for download
+  - Priority ordering
+  - Background download support
+  - Pause/Resume functionality
+- [ ] Show queue status in UI
+- [ ] Persist queue across app restarts
+
+**Checkpoint**: Can queue multiple retrievals
+
+#### Day 50: Offline Support
+- [ ] Track which studies are available offline
+- [ ] Show offline indicator on studies
+- [ ] Filter to show offline-only
+- [ ] Handle storage cleanup
+- [ ] Show storage usage statistics
+
+**Checkpoint**: Offline viewing capability working
+
+### Sprint 5 Exit Criteria
+- [ ] C-GET retrieves images successfully
+- [ ] Progress shown during download
+- [ ] Images stored locally
+- [ ] Queue manages multiple downloads
+- [ ] Offline studies accessible
+
+---
+
+## 🖼️ Sprint 6: Image Display (Weeks 11-12)
+
+### Week 11: Basic Rendering
+
+#### Day 51-52: Image Parsing
+- [ ] Create `DICOMImageLoader.swift`:
+  ```swift
+  func loadImage(from url: URL) async throws -> DICOMFile {
+      let data = try Data(contentsOf: url)
+      return try DICOMFile.read(from: data)
+  }
+  
+  func renderImage(from file: DICOMFile) -> CGImage? {
+      guard let pixelData = file.pixelData() else { return nil }
+      let renderer = PixelDataRenderer(pixelData: pixelData)
+      return renderer.renderFrame(0)
+  }
+  ```
+
+**Checkpoint**: Can parse stored DICOM files
+
+#### Day 53-54: Image View
+- [ ] Create `DICOMImageView.swift`:
+  ```swift
+  struct DICOMImageView: View {
+      let cgImage: CGImage?
+      
+      var body: some View {
+          if let image = cgImage {
+              Image(decorative: image, scale: 1.0)
+                  .resizable()
+                  .aspectRatio(contentMode: .fit)
+          } else {
+              ContentUnavailableView("No Image", 
+                  systemImage: "photo.badge.exclamationmark")
+          }
+      }
+  }
+  ```
+- [ ] Handle loading states
+- [ ] Handle error states
+- [ ] Add placeholder for loading
+
+**Checkpoint**: Basic image display working
+
+#### Day 55: Image Metadata Overlay
+- [ ] Create `ImageOverlayView.swift` showing:
+  - Patient Name
+  - Study Date
+  - Series Description
+  - Instance Number
+  - Image Dimensions
+- [ ] Toggle overlay visibility
+- [ ] Customize overlay position
+
+**Checkpoint**: Metadata displays on image
+
+### Week 12: Series Navigation
+
+#### Day 56-57: Series Viewer
+- [ ] Create `SeriesViewerView.swift`:
+  - Display current image
+  - Image index indicator (e.g., "5 / 120")
+  - Next/Previous buttons
+  - Slider for quick navigation
+- [ ] Preload adjacent images
+- [ ] Smooth transitions between images
+
+**Checkpoint**: Can navigate through series
+
+#### Day 58-59: Keyboard & Gesture Navigation
+- [ ] Implement gestures:
+  - Swipe left/right: Next/Previous image
+  - Double-tap: Fit to window
+  - Long press: Show metadata
+- [ ] Implement keyboard shortcuts (macOS):
+  - ←/→: Navigate images
+  - Space: Play/Pause (for cine)
+  - Home/End: First/Last image
+
+**Checkpoint**: Navigation gestures working
+
+#### Day 60: Cine Mode
+- [ ] Implement auto-play for multi-frame:
+  ```swift
+  @Observable
+  class CineController {
+      var isPlaying = false
+      var frameRate = 10.0
+      
+      func play() {
+          isPlaying = true
+          startPlaybackLoop()
+      }
+      
+      func pause() {
+          isPlaying = false
+      }
+  }
+  ```
+- [ ] Add play/pause button
+- [ ] Frame rate slider
+- [ ] Loop option
+
+**Checkpoint**: Cine playback working
+
+### Sprint 6 Exit Criteria
+- [ ] Images render correctly
+- [ ] Series navigation smooth
+- [ ] Keyboard shortcuts work (macOS)
+- [ ] Touch gestures work (iOS)
+- [ ] Cine mode plays multi-frame
+
+---
+
+## 🎚️ Sprint 7: Image Manipulation (Weeks 13-14)
+
+### Week 13: Window/Level
+
+#### Day 61-62: Window/Level Controls
+- [ ] Create `WindowLevelController.swift`:
+  ```swift
+  @Observable
+  class WindowLevelController {
+      var windowCenter: Double
+      var windowWidth: Double
+      
+      func applyPreset(_ preset: WindowPreset) {
+          windowCenter = preset.center
+          windowWidth = preset.width
+      }
+      
+      func autoWindow(from pixelData: PixelData) {
+          // Calculate from actual pixel range
+      }
+  }
+  ```
+- [ ] Read default values from DICOM
+- [ ] Apply to renderer
+
+**Checkpoint**: Window/Level adjusts image appearance
+
+#### Day 63-64: Window/Level UI
+- [ ] Add sliders for W/C and W/W
+- [ ] Add preset buttons:
+  - CT Abdomen (40/400)
+  - CT Lung (-600/1500)
+  - CT Bone (400/1800)
+  - CT Brain (40/80)
+  - Auto (from image)
+- [ ] Show current values
+- [ ] Drag gesture for interactive adjustment
+
+**Checkpoint**: Window/Level UI complete
+
+#### Day 65: Modality-Specific Presets
+- [ ] Detect modality from DICOM
+- [ ] Show relevant presets only
+- [ ] Add custom preset saving
+- [ ] Remember last used settings
+
+**Checkpoint**: Presets work per modality
+
+### Week 14: Pan & Zoom
+
+#### Day 66-67: Zoom Implementation
+- [ ] Create `ZoomController.swift`:
+  ```swift
+  @Observable
+  class ZoomController {
+      var scale: CGFloat = 1.0
+      var offset: CGSize = .zero
+      
+      func fitToWindow() {
+          scale = 1.0
+          offset = .zero
+      }
+      
+      func actualSize(imageSize: CGSize, containerSize: CGSize) {
+          scale = imageSize.width / containerSize.width
+      }
+  }
+  ```
+- [ ] Implement pinch to zoom (iOS)
+- [ ] Implement scroll wheel zoom (macOS)
+
+**Checkpoint**: Zoom functionality working
+
+#### Day 68-69: Pan Implementation
+- [ ] Add drag gesture for panning
+- [ ] Constrain pan to image bounds
+- [ ] Implement momentum scrolling
+- [ ] Double-tap to reset view
+
+**Checkpoint**: Pan and zoom work together
+
+#### Day 70: Rotation & Flip
+- [ ] Add rotation controls:
+  - Rotate 90° CW
+  - Rotate 90° CCW
+  - Rotate 180°
+- [ ] Add flip controls:
+  - Horizontal flip
+  - Vertical flip
+- [ ] Reset transformation option
+
+**Checkpoint**: All transformations working
+
+### Sprint 7 Exit Criteria
+- [ ] Window/Level adjustable
+- [ ] Presets work correctly
+- [ ] Smooth zoom functionality
+- [ ] Pan with constraints
+- [ ] Rotation and flip working
+
+---
+
+## 📏 Sprint 8: Advanced Features (Weeks 15-16)
+
+### Week 15: Measurements
+
+#### Day 71-72: Measurement Tools
+- [ ] Create `MeasurementTool.swift`:
+  ```swift
+  enum MeasurementType {
+      case distance
+      case angle
+      case area
+      case probe
+  }
+  
+  struct Measurement: Identifiable {
+      let id = UUID()
+      let type: MeasurementType
+      let points: [CGPoint]
+      var result: MeasurementResult
+  }
+  ```
+- [ ] Get pixel spacing from DICOM
+- [ ] Calculate real-world distances
+
+**Checkpoint**: Measurement calculations correct
+
+#### Day 73-74: Measurement UI
+- [ ] Create drawing overlay for measurements
+- [ ] Add tool selection toolbar
+- [ ] Show measurement values on overlay
+- [ ] Allow editing/deleting measurements
+- [ ] Save measurements with image
+
+**Checkpoint**: Can draw and see measurements
+
+#### Day 75: HU Probe Tool
+- [ ] Implement Hounsfield Unit probe:
+  ```swift
+  func getHounsfieldUnit(at point: CGPoint) -> Int? {
+      // DICOM standard: HU = pixel_value * slope + intercept
+      // Default slope=1.0, intercept=0.0 per DICOM standard when tags absent
+      // This means raw pixel values are returned unchanged if no rescale info
+      let rescaleSlope = dataSet.double(for: .rescaleSlope) ?? 1.0
+      let rescaleIntercept = dataSet.double(for: .rescaleIntercept) ?? 0.0
+      guard let rawValue = pixelData.pixelValue(at: point) else { return nil }
+      return Int(Double(rawValue) * rescaleSlope + rescaleIntercept)
+  }
+  ```
+- [ ] Show HU value on hover/tap
+- [ ] Display ROI statistics (mean, std dev)
+
+**Checkpoint**: HU probe working for CT images
+
+### Week 16: Tag Browser
+
+#### Day 76-77: DICOM Tag Browser
+- [ ] Create `TagBrowserView.swift`:
+  - Hierarchical tree view
+  - Search/filter functionality
+  - Group by category
+  - Show tag name, VR, value
+- [ ] Handle sequence expansion
+- [ ] Format values by VR type
+
+**Checkpoint**: Full tag browser functional
+
+#### Day 78-79: Export Features
+- [ ] Export current view as PNG/JPEG
+- [ ] Export all frames as sequence
+- [ ] Copy to clipboard
+- [ ] Share sheet integration (iOS)
+- [ ] Add annotations to export
+
+**Checkpoint**: Export functionality working
+
+#### Day 80: Comparison View
+- [ ] Create 2-up comparison view
+- [ ] Synchronized scrolling option
+- [ ] Synchronized window/level
+- [ ] Cross-reference lines
+
+**Checkpoint**: Side-by-side comparison working
+
+### Sprint 8 Exit Criteria
+- [ ] Distance measurements calibrated
+- [ ] HU probe accurate for CT
+- [ ] Tag browser shows all elements
+- [ ] Export produces quality images
+- [ ] Comparison view functional
+
+---
+
+## 🗄️ Sprint 9: Study Management (Weeks 17-18)
+
+### Week 17: Local Database
+
+#### Day 81-82: SwiftData Models
+- [ ] Create SwiftData schema:
+  ```swift
+  @Model
+  class LocalStudy {
+      var studyInstanceUID: String
+      var patientName: String?
+      var patientID: String?
+      var studyDate: Date?
+      var modality: String?
+      var numberOfSeries: Int
+      var localPath: URL
+      
+      @Relationship(deleteRule: .cascade)
+      var series: [LocalSeries]
+  }
+  ```
+- [ ] Set up ModelContainer
+- [ ] Implement CRUD operations
+
+**Checkpoint**: SwiftData models working
+
+#### Day 83-84: Import from PACS
+- [ ] Auto-index retrieved studies
+- [ ] Update index on new retrieval
+- [ ] Handle duplicate detection
+- [ ] Merge metadata updates
+
+**Checkpoint**: PACS studies indexed automatically
+
+#### Day 85: Study Browser
+- [ ] Create local study browser view
+- [ ] Search/filter local studies
+- [ ] Sort by date, patient, modality
+- [ ] Show storage size per study
+
+**Checkpoint**: Can browse local studies
+
+### Week 18: Organization Features
+
+#### Day 86-87: Folder Import
+- [ ] Import DICOM folder
+- [ ] Parse DICOMDIR if present
+- [ ] Progress during import
+- [ ] Handle nested directories
+
+**Checkpoint**: Folder import working
+
+#### Day 88-89: Study Management
+- [ ] Delete studies (with confirmation)
+- [ ] Archive to external location
+- [ ] Storage statistics view
+- [ ] Cleanup old/unused studies
+
+**Checkpoint**: Study management features complete
+
+#### Day 90: Sync Status
+- [ ] Track sync status with PACS
+- [ ] Show "available offline" indicators
+- [ ] Refresh metadata from PACS
+- [ ] Conflict resolution
+
+**Checkpoint**: Sync status visible
+
+### Sprint 9 Exit Criteria
+- [ ] Local database indexes studies
+- [ ] Can import DICOM folders
+- [ ] Study management (delete/archive)
+- [ ] Storage statistics accurate
+- [ ] Sync status tracked
+
+---
+
+## ✨ Sprint 10: Polish & Release (Weeks 19-20)
+
+### Week 19: Platform Optimization
+
+#### Day 91-92: macOS Polish
+- [ ] Native menu bar
+- [ ] Keyboard shortcuts
+- [ ] Multiple windows
+- [ ] Drag from Finder
+- [ ] Quick Look extension
+
+**Checkpoint**: macOS feels native
+
+#### Day 93-94: iOS Polish
+- [ ] iPad split view
+- [ ] Files app integration
+- [ ] Share extension
+- [ ] Haptic feedback
+- [ ] Widget (recent studies)
+
+**Checkpoint**: iOS feels native
+
+#### Day 95: visionOS Features
+- [ ] Spatial image viewing
+- [ ] Eye tracking selection
+- [ ] Ornaments for controls
+- [ ] Volume display mode
+
+**Checkpoint**: visionOS experience polished
+
+### Week 20: Final Polish
+
+#### Day 96-97: Accessibility
+- [ ] VoiceOver labels
+- [ ] Dynamic Type support
+- [ ] Reduce Motion support
+- [ ] High contrast mode
+- [ ] Keyboard navigation (macOS)
+
+**Checkpoint**: Accessibility audit passes
+
+#### Day 98-99: Documentation
+- [ ] In-app help
+- [ ] README with screenshots
+- [ ] API documentation
+- [ ] Troubleshooting guide
+
+**Checkpoint**: Documentation complete
+
+#### Day 100: Final Testing
+- [ ] Full test pass on all platforms
+- [ ] Performance profiling
+- [ ] Memory leak checking
+- [ ] Final bug fixes
+- [ ] Release preparation
+
+**Checkpoint**: Ready for release
+
+### Sprint 10 Exit Criteria
+- [ ] All platforms polished
+- [ ] Accessibility compliant
+- [ ] Documentation complete
+- [ ] No critical bugs
+- [ ] Performance acceptable
+
+---
+
+## 📋 Daily Standup Template
+
+Use this template for daily progress tracking:
+
+```markdown
+### Day [N] - [Date]
+
+**Completed:**
+- [x] Task 1
+- [x] Task 2
+
+**In Progress:**
+- [ ] Task 3 (50% complete)
+
+**Blocked:**
+- Issue description
+- Needed resolution
+
+**Tomorrow:**
+- Task 4
+- Task 5
+
+**Notes:**
+- Any observations or decisions
+```
+
+---
+
+## 🎯 Milestone Checkpoints
+
+| Week | Milestone | Success Criteria |
+|------|-----------|------------------|
+| 2 | Foundation Complete | App runs on all platforms |
+| 4 | Server Config Working | Can configure and test PACS connections |
+| 6 | Patient Query Working | Can search and find patients |
+| 8 | Navigation Complete | Full Patient→Study→Series drill-down |
+| 10 | Retrieval Working | Can download and store images |
+| 12 | Basic Viewing | Can view DICOM images |
+| 14 | Image Tools | Window/level, pan, zoom working |
+| 16 | Advanced Features | Measurements and tag browser |
+| 18 | Study Management | Local database and organization |
+| 20 | Release Ready | Production-quality application |
+
+---
+
+## 🔄 Risk Mitigation
+
+| Risk | Probability | Impact | Mitigation |
+|------|-------------|--------|------------|
+| PACS connectivity issues | Medium | High | Test early with Orthanc; have fallback test data |
+| Performance with large studies | Medium | Medium | Implement lazy loading; profile early |
+| Platform differences | Low | Medium | Test on all platforms each sprint |
+| DICOMKit API changes | Low | High | Pin to specific version; monitor releases |
+| Storage space issues | Medium | Low | Implement cleanup; show warnings early |
+
+---
+
+## 📦 Deliverables Per Sprint
+
+| Sprint | Code Deliverables | Documentation |
+|--------|-------------------|---------------|
+| 1 | App skeleton, models | Architecture doc |
+| 2 | Server config UI, C-ECHO | User guide: Server setup |
+| 3 | Patient search | User guide: Searching |
+| 4 | Study/Series views | Navigation flow doc |
+| 5 | Retrieval service | Retrieval guide |
+| 6 | Image viewer | Viewing guide |
+| 7 | Image tools | Tools reference |
+| 8 | Measurements, export | Measurements guide |
+| 9 | Database, import | Data management guide |
+| 10 | Polish, accessibility | Full user manual |
+
+---
+
+# DETAILED PHASE DOCUMENTATION
+
+The following sections provide the detailed implementation guidance for each phase:
+
+---
+
 ## Phase 1: PACS Connectivity - Patient Query (2-3 weeks)
 
 **Goal**: Establish connection to PACS servers and query patient details using C-FIND.
