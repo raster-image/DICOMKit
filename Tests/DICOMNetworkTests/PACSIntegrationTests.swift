@@ -11,19 +11,29 @@ import Foundation
 /// These tests verify the DICOMNetwork module's ability to connect to and communicate
 /// with a remote DICOM PACS (Picture Archiving and Communication System) server.
 ///
-/// ## Configuration
+/// ## Default Configuration
 ///
-/// The tests use the following PACS settings:
+/// The tests use the following default PACS settings:
 /// - Host: 117.247.185.219
 /// - Port: 11112
 /// - Called AE Title: TEAMPACS
 /// - Calling AE Title: MAYAM
 ///
+/// ## Environment Variable Configuration
+///
+/// All configuration values can be overridden using environment variables:
+/// - `DICOM_PACS_HOST`: Remote PACS host address
+/// - `DICOM_PACS_PORT`: Remote PACS port number
+/// - `DICOM_CALLED_AE`: Called AE Title (PACS server)
+/// - `DICOM_CALLING_AE`: Calling AE Title (this application)
+/// - `DICOM_TIMEOUT`: Connection timeout in seconds
+///
 /// ## Requirements
 ///
+/// - Apple platform with Network framework (iOS, macOS, visionOS)
 /// - Network access to the PACS server
 /// - PACS server must be running and accepting connections
-/// - Firewall must allow outbound connections on port 11112
+/// - Firewall must allow outbound connections on the configured port
 ///
 /// ## Running Integration Tests
 ///
@@ -32,26 +42,56 @@ import Foundation
 /// swift test --filter PACSIntegrationTests
 /// ```
 ///
+/// To run with custom configuration:
+/// ```bash
+/// DICOM_PACS_HOST="192.168.1.100" DICOM_CALLED_AE="MY_PACS" swift test --filter PACSIntegrationTests
+/// ```
+///
 /// Note: Integration tests may fail if the PACS server is unreachable or misconfigured.
 
 // MARK: - Test Configuration
 
 /// Configuration for PACS integration tests
+///
+/// All configuration values can be overridden using environment variables:
+/// - `DICOM_PACS_HOST`: Remote PACS host address (default: 117.247.185.219)
+/// - `DICOM_PACS_PORT`: Remote PACS port (default: 11112)
+/// - `DICOM_CALLED_AE`: Called AE Title (default: TEAMPACS)
+/// - `DICOM_CALLING_AE`: Calling AE Title (default: MAYAM)
+/// - `DICOM_TIMEOUT`: Connection timeout in seconds (default: 30)
 enum PACSTestConfiguration {
     /// Remote PACS host address
-    static let host = "117.247.185.219"
+    static var host: String {
+        ProcessInfo.processInfo.environment["DICOM_PACS_HOST"] ?? "117.247.185.219"
+    }
     
     /// Remote PACS port
-    static let port: UInt16 = 11112
+    static var port: UInt16 {
+        if let portString = ProcessInfo.processInfo.environment["DICOM_PACS_PORT"],
+           let port = UInt16(portString) {
+            return port
+        }
+        return 11112
+    }
     
     /// Called AE Title (PACS server)
-    static let calledAETitle = "TEAMPACS"
+    static var calledAETitle: String {
+        ProcessInfo.processInfo.environment["DICOM_CALLED_AE"] ?? "TEAMPACS"
+    }
     
     /// Calling AE Title (this application)
-    static let callingAETitle = "MAYAM"
+    static var callingAETitle: String {
+        ProcessInfo.processInfo.environment["DICOM_CALLING_AE"] ?? "MAYAM"
+    }
     
     /// Connection timeout in seconds
-    static let timeout: TimeInterval = 30
+    static var timeout: TimeInterval {
+        if let timeoutString = ProcessInfo.processInfo.environment["DICOM_TIMEOUT"],
+           let timeout = TimeInterval(timeoutString) {
+            return timeout
+        }
+        return 30
+    }
     
     /// Maximum PDU size
     static let maxPDUSize: UInt32 = 16384
@@ -315,6 +355,7 @@ struct PACSAssociationIntegrationTests {
             port: PACSTestConfiguration.port,
             maxPDUSize: PACSTestConfiguration.maxPDUSize,
             implementationClassUID: VerificationConfiguration.defaultImplementationClassUID,
+            implementationVersionName: VerificationConfiguration.defaultImplementationVersionName,
             timeout: PACSTestConfiguration.timeout
         )
         
