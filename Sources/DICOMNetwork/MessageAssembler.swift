@@ -242,9 +242,13 @@ public struct MessageFragmenter: Sendable {
     /// - Parameter maxPDUSize: The negotiated maximum PDU size
     public init(maxPDUSize: UInt32) {
         // PDV header is 4 bytes (length) + 1 byte (context ID) + 1 byte (message control)
-        // PDU header is 6 bytes, so max PDV size = maxPDUSize - 6 - 6 = maxPDUSize - 12
-        // But we're more conservative to account for multiple PDVs
-        self.maxPDVDataSize = max(maxPDUSize - 12, 4096)
+        // PDU header is 6 bytes, so max PDV data size = maxPDUSize - 6 (PDU header) - 6 (PDV header) = maxPDUSize - 12
+        // Ensure a minimum size to prevent degenerate cases
+        if maxPDUSize > 12 {
+            self.maxPDVDataSize = maxPDUSize - 12
+        } else {
+            self.maxPDVDataSize = 4096 // Reasonable default
+        }
     }
     
     /// Fragments a command set into PDVs

@@ -19,14 +19,15 @@ public enum DIMSEStatus: Sendable, Hashable {
     
     // MARK: - Failure Status
     
-    /// Refused - Out of resources (0xA700, 0xA900)
-    case refusedOutOfResources(UInt16)
+    /// Refused - Out of resources (0xA700)
+    case refusedOutOfResources
     
     /// Refused - SOP Class not supported (0x0122)
     case refusedSOPClassNotSupported
     
-    /// Error - Data set does not match SOP Class (0xA900)
-    case errorDataSetDoesNotMatchSOPClass
+    /// Error - Identifier/Data does not match SOP Class (0xA900)
+    /// Used for both "identifier does not match" and "data set does not match" conditions
+    case errorIdentifierDoesNotMatchSOPClass
     
     /// Error - Cannot understand (0xC000-0xCFFF)
     case errorCannotUnderstand(UInt16)
@@ -52,12 +53,10 @@ public enum DIMSEStatus: Sendable, Hashable {
     /// Failed - Move destination unknown (0xA801)
     case failedMoveDestinationUnknown
     
-    /// Failed - Identifier does not match SOP Class (0xA900)
-    case failedIdentifierDoesNotMatchSOPClass
-    
     // MARK: - Warning Status
     
-    /// Warning - Coercion of data elements (0xB000)
+    /// Warning - Coercion of data elements or sub-operations complete with warnings (0xB000)
+    /// Used for both coercion warnings and C-GET/C-MOVE sub-operation warnings
     case warningCoercionOfDataElements
     
     /// Warning - Data set does not match SOP Class (0xB007)
@@ -65,9 +64,6 @@ public enum DIMSEStatus: Sendable, Hashable {
     
     /// Warning - Elements discarded (0xB006)
     case warningElementsDiscarded
-    
-    /// Warning - Sub-operations complete with warnings (0xB000 for C-GET/C-MOVE)
-    case warningSuboperationsComplete
     
     // MARK: - Other/Unknown
     
@@ -83,11 +79,11 @@ public enum DIMSEStatus: Sendable, Hashable {
             return warningOptionalKeys ? 0xFF01 : 0xFF00
         case .cancel:
             return 0xFE00
-        case .refusedOutOfResources(let code):
-            return code
+        case .refusedOutOfResources:
+            return 0xA700
         case .refusedSOPClassNotSupported:
             return 0x0122
-        case .errorDataSetDoesNotMatchSOPClass:
+        case .errorIdentifierDoesNotMatchSOPClass:
             return 0xA900
         case .errorCannotUnderstand(let code):
             return code
@@ -105,16 +101,12 @@ public enum DIMSEStatus: Sendable, Hashable {
             return code
         case .failedMoveDestinationUnknown:
             return 0xA801
-        case .failedIdentifierDoesNotMatchSOPClass:
-            return 0xA900
         case .warningCoercionOfDataElements:
             return 0xB000
         case .warningDataSetDoesNotMatchSOPClass:
             return 0xB007
         case .warningElementsDiscarded:
             return 0xB006
-        case .warningSuboperationsComplete:
-            return 0xB000
         case .unknown(let code):
             return code
         }
@@ -146,12 +138,14 @@ public enum DIMSEStatus: Sendable, Hashable {
             return .refusedSOPClassNotSupported
         case 0x0213:
             return .failedResourceLimitation
-        case 0xA700, 0xA900:
-            return .refusedOutOfResources(rawValue)
+        case 0xA700:
+            return .refusedOutOfResources
         case 0xA701, 0xA702:
             return .failedOutOfResources(rawValue)
         case 0xA801:
             return .failedMoveDestinationUnknown
+        case 0xA900:
+            return .errorIdentifierDoesNotMatchSOPClass
         case 0xB000:
             return .warningCoercionOfDataElements
         case 0xB006:
@@ -181,11 +175,11 @@ public enum DIMSEStatus: Sendable, Hashable {
     public var isFailure: Bool {
         switch self {
         case .refusedOutOfResources, .refusedSOPClassNotSupported,
-             .errorDataSetDoesNotMatchSOPClass, .errorCannotUnderstand,
+             .errorIdentifierDoesNotMatchSOPClass, .errorCannotUnderstand,
              .failedUnableToProcess, .failedDuplicateSOPInstance,
              .failedNoSuchSOPClass, .failedNoSuchSOPInstance,
              .failedResourceLimitation, .failedOutOfResources,
-             .failedMoveDestinationUnknown, .failedIdentifierDoesNotMatchSOPClass:
+             .failedMoveDestinationUnknown:
             return true
         case .unknown(let code):
             // Status codes 0x0001-0x00FF and 0xA000-0xAFFF are failures
@@ -199,7 +193,7 @@ public enum DIMSEStatus: Sendable, Hashable {
     public var isWarning: Bool {
         switch self {
         case .warningCoercionOfDataElements, .warningDataSetDoesNotMatchSOPClass,
-             .warningElementsDiscarded, .warningSuboperationsComplete:
+             .warningElementsDiscarded:
             return true
         case .unknown(let code):
             // Status codes 0xB000-0xBFFF are warnings
@@ -232,12 +226,12 @@ extension DIMSEStatus: CustomStringConvertible {
             return "Pending (\(code))"
         case .cancel:
             return "Cancel (0xFE00)"
-        case .refusedOutOfResources(let code):
-            return "Refused: Out of resources (0x\(String(format: "%04X", code)))"
+        case .refusedOutOfResources:
+            return "Refused: Out of resources (0xA700)"
         case .refusedSOPClassNotSupported:
             return "Refused: SOP Class not supported (0x0122)"
-        case .errorDataSetDoesNotMatchSOPClass:
-            return "Error: Data set does not match SOP Class (0xA900)"
+        case .errorIdentifierDoesNotMatchSOPClass:
+            return "Error: Identifier/Data does not match SOP Class (0xA900)"
         case .errorCannotUnderstand(let code):
             return "Error: Cannot understand (0x\(String(format: "%04X", code)))"
         case .failedUnableToProcess:
@@ -254,16 +248,12 @@ extension DIMSEStatus: CustomStringConvertible {
             return "Failed: Out of resources (0x\(String(format: "%04X", code)))"
         case .failedMoveDestinationUnknown:
             return "Failed: Move destination unknown (0xA801)"
-        case .failedIdentifierDoesNotMatchSOPClass:
-            return "Failed: Identifier does not match SOP Class (0xA900)"
         case .warningCoercionOfDataElements:
             return "Warning: Coercion of data elements (0xB000)"
         case .warningDataSetDoesNotMatchSOPClass:
             return "Warning: Data set does not match SOP Class (0xB007)"
         case .warningElementsDiscarded:
             return "Warning: Elements discarded (0xB006)"
-        case .warningSuboperationsComplete:
-            return "Warning: Sub-operations complete (0xB000)"
         case .unknown(let code):
             return "Unknown status (0x\(String(format: "%04X", code)))"
         }

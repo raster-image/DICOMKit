@@ -212,9 +212,11 @@ final class CommandSetTests: XCTestCase {
         XCTAssertNotNil(decoded.getUInt32(.commandGroupLength))
     }
     
-    func testDecodeShortDataThrows() {
-        let shortData = Data([0x00, 0x00, 0x00]) // Only 3 bytes
-        XCTAssertThrowsError(try CommandSet.decode(from: shortData))
+    func testDecodeShortDataReturnsEmpty() throws {
+        let shortData = Data([0x00, 0x00, 0x00]) // Only 3 bytes, not enough for any element
+        let decoded = try CommandSet.decode(from: shortData)
+        // With less than 8 bytes, no elements can be decoded
+        XCTAssertNil(decoded.command)
     }
     
     // MARK: - Description

@@ -308,14 +308,17 @@ public struct CommandSet: Sendable, Hashable {
         var offset = 0
         
         while offset + 8 <= data.count {
-            // Read tag (4 bytes)
-            let group: UInt16 = data.withUnsafeBytes { $0.load(fromByteOffset: offset, as: UInt16.self) }
-            let element: UInt16 = data.withUnsafeBytes { $0.load(fromByteOffset: offset + 2, as: UInt16.self) }
+            // Read tag (4 bytes) - safe unaligned read
+            let group = UInt16(data[offset]) | (UInt16(data[offset + 1]) << 8)
+            let element = UInt16(data[offset + 2]) | (UInt16(data[offset + 3]) << 8)
             let tag = Tag(group: group, element: element)
             offset += 4
             
-            // Read value length (4 bytes)
-            let valueLength: UInt32 = data.withUnsafeBytes { $0.load(fromByteOffset: offset, as: UInt32.self) }
+            // Read value length (4 bytes) - safe unaligned read
+            let valueLength = UInt32(data[offset]) |
+                              (UInt32(data[offset + 1]) << 8) |
+                              (UInt32(data[offset + 2]) << 16) |
+                              (UInt32(data[offset + 3]) << 24)
             offset += 4
             
             // Read value

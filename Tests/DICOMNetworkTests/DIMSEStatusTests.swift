@@ -61,11 +61,33 @@ final class DIMSEStatusTests: XCTestCase {
     
     // MARK: - Failure Status
     
+    func testRefusedOutOfResources() {
+        let status = DIMSEStatus.refusedOutOfResources
+        XCTAssertEqual(status.rawValue, 0xA700)
+        XCTAssertTrue(status.isFailure)
+    }
+    
     func testRefusedSOPClassNotSupported() {
         let status = DIMSEStatus.refusedSOPClassNotSupported
         XCTAssertEqual(status.rawValue, 0x0122)
         XCTAssertTrue(status.isFailure)
         XCTAssertTrue(status.isFinal)
+    }
+    
+    func testErrorIdentifierDoesNotMatchSOPClass() {
+        let status = DIMSEStatus.errorIdentifierDoesNotMatchSOPClass
+        XCTAssertEqual(status.rawValue, 0xA900)
+        XCTAssertTrue(status.isFailure)
+    }
+    
+    func testErrorIdentifierDoesNotMatchSOPClassFromRawValue() {
+        let status = DIMSEStatus.from(0xA900)
+        if case .errorIdentifierDoesNotMatchSOPClass = status {
+            // Expected
+        } else {
+            XCTFail("Expected errorIdentifierDoesNotMatchSOPClass status")
+        }
+        XCTAssertTrue(status.isFailure)
     }
     
     func testFailedUnableToProcess() {
