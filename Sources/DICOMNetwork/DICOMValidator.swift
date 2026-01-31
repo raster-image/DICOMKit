@@ -472,7 +472,7 @@ public struct DICOMValidator: Sendable {
         // HEVC/H.265 Main Profile
         "1.2.840.10008.1.2.4.107",
         // HEVC/H.265 Main 10 Profile
-        "1.2.840.10008.1.2.4.108"
+        "1.2.840.10008.1.2.4.108",
     ]
     
     // MARK: - Initialization

@@ -469,7 +469,7 @@ final class DICOMValidatorTests: XCTestCase {
         let (getString, getData) = createDataProvider(strings: [
             .sopClassUID: "1.2.840.10008.5.1.4.1.1.2",
             .sopInstanceUID: "1.2.3.4.5.6.7.8.9.10",
-            .studyInstanceUID: "bad.001.uid",  // Leading zero is invalid
+            .studyInstanceUID: "1.2.001.4",  // Leading zero in component "001" is invalid
             .seriesInstanceUID: "1.2.3.4.5.6.7.8.9.12",
             .patientID: "PATIENT001",
             .modality: "CT"
