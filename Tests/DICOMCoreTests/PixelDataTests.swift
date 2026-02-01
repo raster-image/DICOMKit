@@ -127,6 +127,44 @@ struct PixelDataTests {
         #expect(values! == [0, 2047, 4095, 1000])
     }
     
+    @Test("pixelValues for signed 12-bit CT image")
+    func testPixelValuesSigned12BitCT() {
+        // CT images typically use 16-bit allocation with 12-bit stored, signed
+        // This is a common format for CT Hounsfield Unit data
+        let descriptor = PixelDataDescriptor(
+            rows: 2, columns: 2, bitsAllocated: 16, bitsStored: 12, highBit: 11,
+            isSigned: true, photometricInterpretation: .monochrome2
+        )
+        
+        // 12-bit signed values in CT:
+        // Range: -2048 to +2047 (Hounsfield Units: -1024 HU air to +3071 HU bone after rescale)
+        // -1024 stored as 0xFC00 = 4096 - 1024 = 3072 (0x0C00 in 12-bit two's complement = -1024)
+        // Actually for 12-bit signed: -1024 = 0xC00 in 12-bit two's complement
+        // In little endian 16-bit: 0x00, 0x0C is 0x0C00 = 3072, but we need to treat as signed 12-bit
+        // 
+        // For 12-bit signed values:
+        //   0 = 0x000
+        //   100 = 0x064  
+        //   -100 = 0xF9C (4096 - 100 = 3996 = 0xF9C, but masked to 12 bits)
+        //   -1 = 0xFFF (4095 = 0x0FFF in 16-bit LE: 0xFF, 0x0F)
+        //   2047 = 0x7FF (max positive for signed 12-bit)
+        //   -2048 = 0x800 (min negative for signed 12-bit)
+        let data = Data([
+            0x00, 0x00,  // 0
+            0x64, 0x00,  // 100 (0x064)
+            0x9C, 0x0F,  // -100 in 12-bit signed: 0xF9C (stored in lower 12 bits)
+            0xFF, 0x0F   // -1 in 12-bit signed: 0xFFF
+        ])
+        let pixelData = PixelData(data: data, descriptor: descriptor)
+        
+        let values = pixelData.pixelValues(forFrame: 0)
+        #expect(values != nil)
+        #expect(values![0] == 0)
+        #expect(values![1] == 100)
+        #expect(values![2] == -100)
+        #expect(values![3] == -1)
+    }
+    
     @Test("pixelValues for signed 16-bit")
     func testPixelValuesSigned16Bit() {
         let descriptor = PixelDataDescriptor(
@@ -271,6 +309,33 @@ struct PixelDataTests {
         let range = pixelData.pixelRange(forFrame: 0)
         #expect(range != nil)
         #expect(range!.min == -100)
+        #expect(range!.max == 100)
+    }
+    
+    @Test("pixelRange for signed 12-bit CT values")
+    func testPixelRangeSigned12BitCT() {
+        // CT images use signed 12-bit data with typical values like:
+        // Air: -1000 HU, Water: 0 HU, Soft tissue: 40-80 HU, Bone: 400-3000 HU
+        // These are stored as signed 12-bit values
+        let descriptor = PixelDataDescriptor(
+            rows: 2, columns: 2, bitsAllocated: 16, bitsStored: 12, highBit: 11,
+            isSigned: true, photometricInterpretation: .monochrome2
+        )
+        
+        // Values: -1000 (0xC18), 0, 100 (0x064), -500 (0xE0C)
+        // -1000 in 12-bit two's complement: 4096 - 1000 = 3096 = 0xC18
+        // -500 in 12-bit two's complement: 4096 - 500 = 3596 = 0xE0C
+        let data = Data([
+            0x18, 0x0C,  // -1000 (0x0C18 stored in LE)
+            0x00, 0x00,  // 0
+            0x64, 0x00,  // 100
+            0x0C, 0x0E   // -500 (0x0E0C stored in LE)
+        ])
+        let pixelData = PixelData(data: data, descriptor: descriptor)
+        
+        let range = pixelData.pixelRange(forFrame: 0)
+        #expect(range != nil)
+        #expect(range!.min == -1000)
         #expect(range!.max == 100)
     }
     
