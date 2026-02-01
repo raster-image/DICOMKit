@@ -35,6 +35,7 @@ extension DICOMFile {
         
         // Get the codec for this transfer syntax
         guard let codec = CodecRegistry.shared.codec(for: tsUID) else {
+            // No codec available for this transfer syntax
             return nil
         }
         
@@ -44,6 +45,7 @@ extension DICOMFile {
         
         for frameIndex in 0..<descriptor.numberOfFrames {
             guard let frameData = encapsulated.frameData(at: frameIndex) else {
+                // Could not retrieve frame data from encapsulated pixel data
                 return nil
             }
             
@@ -55,7 +57,9 @@ extension DICOMFile {
                 )
                 decompressedData.append(decompressedFrame)
             } catch {
-                // Decompression failed
+                // Decompression failed - codec could not decode the compressed frame data
+                // This can happen if the compressed data is corrupted or uses an unsupported
+                // variant of the compression format
                 return nil
             }
         }
