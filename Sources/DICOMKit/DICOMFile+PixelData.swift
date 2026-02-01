@@ -16,11 +16,51 @@ extension DICOMFile {
     /// Extracts pixel data from the DICOM file
     ///
     /// Returns the uncompressed pixel data along with its descriptor.
+    /// For compressed transfer syntaxes (JPEG, JPEG 2000, RLE), the pixel data
+    /// is automatically decompressed using the appropriate codec.
     /// Returns nil if pixel data is not present or cannot be extracted.
     ///
     /// - Returns: PixelData if extraction succeeds
     public func pixelData() -> PixelData? {
-        dataSet.pixelData()
+        // First try to get uncompressed pixel data directly
+        if let uncompressedData = dataSet.pixelData() {
+            return uncompressedData
+        }
+        
+        // Check if we have encapsulated (compressed) pixel data
+        guard let encapsulated = dataSet.encapsulatedPixelData(),
+              let tsUID = transferSyntaxUID else {
+            return nil
+        }
+        
+        // Get the codec for this transfer syntax
+        guard let codec = CodecRegistry.shared.codec(for: tsUID) else {
+            return nil
+        }
+        
+        // Decompress all frames
+        let descriptor = encapsulated.descriptor
+        var decompressedData = Data()
+        
+        for frameIndex in 0..<descriptor.numberOfFrames {
+            guard let frameData = encapsulated.frameData(at: frameIndex) else {
+                return nil
+            }
+            
+            do {
+                let decompressedFrame = try codec.decodeFrame(
+                    frameData,
+                    descriptor: descriptor,
+                    frameIndex: frameIndex
+                )
+                decompressedData.append(decompressedFrame)
+            } catch {
+                // Decompression failed
+                return nil
+            }
+        }
+        
+        return PixelData(data: decompressedData, descriptor: descriptor)
     }
     
     /// Creates a PixelDataDescriptor from the file's image pixel attributes
