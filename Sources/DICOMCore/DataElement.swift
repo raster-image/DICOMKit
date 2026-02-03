@@ -283,7 +283,7 @@ public struct DataElement: Sendable {
         case .US, .SS, .UN, .OW:
             let count = valueData.count / 2
             guard count > 0 else {
-                return []
+                return nil
             }
             
             var values: [UInt16] = []
