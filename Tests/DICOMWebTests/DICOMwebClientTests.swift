@@ -457,10 +457,30 @@ struct DICOMwebClientErrorHandlingTests {
         let emptyURL = URL(string: "")
         #expect(emptyURL == nil)
         
-        // Test with just whitespace - URL(string: "   ") may return nil or invalid
-        let whitespaceURL = URL(string: "   ")
-        // On some platforms this returns nil, on others it's treated as relative
-        // Just test that our code handles this case
+        // Test that the DICOMwebError has the correct format
+        let error = DICOMwebError.invalidBulkDataReference(uri: "test-uri")
+        #expect(error.errorDescription?.contains("bulk data") == true)
+    }
+    
+    @Test("Empty bulk data URI throws error")
+    func testEmptyBulkDataURIThrows() async {
+        let testURL = URL(string: "https://pacs.example.com/dicom-web")!
+        let config = DICOMwebConfiguration(baseURL: testURL)
+        let client = DICOMwebClient(configuration: config)
+        
+        do {
+            // Empty string returns nil from URL(string:), which should throw invalidBulkDataReference
+            _ = try await client.retrieveBulkData(uri: "")
+            #expect(Bool(false), "Expected error for empty URI")
+        } catch let error as DICOMwebError {
+            if case .invalidBulkDataReference = error {
+                // Expected
+            } else {
+                #expect(Bool(false), "Expected invalidBulkDataReference error, got \(error)")
+            }
+        } catch {
+            #expect(Bool(false), "Expected DICOMwebError")
+        }
     }
     
     @Test("Empty frames array throws error")

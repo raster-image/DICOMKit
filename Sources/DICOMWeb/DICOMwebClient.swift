@@ -386,10 +386,11 @@ public final class DICOMwebClient: @unchecked Sendable {
         let contentType = response.header("Content-Type") ?? ""
         let parts = try parseMultipartResponse(data: response.body, contentType: contentType)
         
-        // Build frame results
-        return parts.enumerated().map { index, part in
+        // Build frame results - use requested frame numbers for corresponding parts
+        // WADO-RS spec states frames are returned in the order requested
+        return zip(frames, parts).map { frameNumber, part in
             FrameResult(
-                frameNumber: frames.indices.contains(index) ? frames[index] : index + 1,
+                frameNumber: frameNumber,
                 data: part.body,
                 contentType: part.contentType
             )
