@@ -230,7 +230,7 @@ public enum ConformanceStatementGenerator {
                     transactionUIDTracking: true
                 ),
                 eventSubscription: ConformanceStatement.EventSubscription(
-                    supported: false,  // Per MILESTONES.md - deferred to v0.8.8
+                    supported: false,  // Per MILESTONES.md - deferred to future version
                     deliveryMethods: [],
                     globalSubscription: false
                 )
