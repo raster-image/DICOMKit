@@ -3105,7 +3105,7 @@ This milestone is divided into modular sub-milestones based on feature complexit
 
 | Sub-Milestone | Version | Complexity | Status | Key Deliverables |
 |--------------|---------|------------|--------|------------------|
-| 10.1 GSPS | v1.0.1 | High | Planned | Grayscale Presentation State, LUT transforms, annotations |
+| 10.1 GSPS | v1.0.1 | High | ✅ Completed | Grayscale Presentation State, LUT transforms, annotations |
 | 10.2 CSPS/Pseudo-Color | v1.0.2 | Medium | Planned | Color/Pseudo-Color PS, ICC profiles, blending |
 | 10.3 Hanging Protocol | v1.0.3 | High | Planned | Protocol definition, matching, display sets |
 | 10.4 RT Structure Set | v1.0.4 | Very High | Planned | ROI contours, structure visualization |
