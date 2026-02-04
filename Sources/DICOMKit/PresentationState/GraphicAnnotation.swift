@@ -109,7 +109,7 @@ public struct GraphicAnnotation: Sendable, Hashable {
 /// Reference: PS3.3 Section C.10.5.1.2 - Graphic Object Sequence
 public struct GraphicObject: Sendable, Hashable {
     /// Type of graphic
-    public let type: GraphicType
+    public let type: PresentationGraphicType
     
     /// Graphic data points (column, row pairs)
     public let data: [Double]
@@ -122,7 +122,7 @@ public struct GraphicObject: Sendable, Hashable {
     
     /// Initialize a graphic object
     public init(
-        type: GraphicType,
+        type: PresentationGraphicType,
         data: [Double],
         filled: Bool = false,
         units: AnnotationUnits = .pixel
@@ -152,10 +152,10 @@ public struct GraphicObject: Sendable, Hashable {
     }
 }
 
-/// Type of graphic object
+/// Type of graphic object for presentation state annotations
 ///
 /// Reference: PS3.3 Section C.10.5.1.2.1 - Graphic Type
-public enum GraphicType: String, Sendable, Hashable {
+public enum PresentationGraphicType: String, Sendable, Hashable {
     /// Single point
     case point = "POINT"
     

@@ -54,63 +54,12 @@ public enum VOILUT: Sendable, Hashable {
     public func apply(to value: Double) -> Double {
         switch self {
         case .window(let center, let width, _, let function):
-            return function.apply(value: value, center: center, width: width)
+            // Use WindowSettings to apply the transformation
+            let settings = WindowSettings(center: center, width: width, function: function)
+            return settings.apply(to: value)
             
         case .lut(let lutData):
             return lutData.lookup(Int(value))
-        }
-    }
-}
-
-/// VOI LUT Function
-///
-/// Defines how window/level transformation is applied.
-///
-/// Reference: PS3.3 Section C.11.2.1.3 - VOI LUT Function
-public enum VOILUTFunction: String, Sendable, Hashable {
-    /// Linear function (default)
-    case linear = "LINEAR"
-    
-    /// Sigmoid function
-    case sigmoid = "SIGMOID"
-    
-    /// Linear-exact function
-    case linearExact = "LINEAR_EXACT"
-    
-    /// Apply the function to map input value through window/level
-    public func apply(value: Double, center: Double, width: Double) -> Double {
-        switch self {
-        case .linear:
-            // PS3.3 C.11.2.1.2.1 - Window Center and Window Width
-            let minValue = center - width / 2.0
-            let maxValue = center + width / 2.0
-            
-            if value <= minValue {
-                return 0.0
-            } else if value >= maxValue {
-                return 1.0
-            } else {
-                return (value - minValue) / width
-            }
-            
-        case .linearExact:
-            // PS3.3 C.11.2.1.3.2 - LINEAR_EXACT
-            let minValue = center - 0.5 - (width - 1.0) / 2.0
-            let maxValue = center - 0.5 + (width - 1.0) / 2.0
-            
-            if value <= minValue {
-                return 0.0
-            } else if value > maxValue {
-                return 1.0
-            } else {
-                return (value - minValue) / (width - 1.0)
-            }
-            
-        case .sigmoid:
-            // PS3.3 C.11.2.1.3.1 - SIGMOID
-            // Output = 1 / (1 + exp(-4 * (value - center) / width))
-            let exponent = -4.0 * (value - center) / width
-            return 1.0 / (1.0 + exp(exponent))
         }
     }
 }
