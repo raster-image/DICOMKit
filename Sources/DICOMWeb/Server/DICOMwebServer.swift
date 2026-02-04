@@ -140,6 +140,10 @@ public actor DICOMwebServer {
             // Add server header
             response.headers["Server"] = configuration.serverName
             
+            // Apply compression if configured and appropriate
+            let compressionMiddleware = CompressionMiddleware(configuration: configuration.compressionConfiguration)
+            response = compressionMiddleware.compressResponse(response, acceptEncoding: request.acceptEncoding)
+            
             return response
         } catch let error as DICOMwebError {
             return errorResponse(for: error)
