@@ -50,7 +50,7 @@ public struct MeasurementReport: Sendable, Equatable {
     public let imageLibraryEntries: [ImageReference]
     
     /// Measurement groups (TID 1501)
-    public let measurementGroups: [MeasurementGroup]
+    public let measurementGroups: [ExtractedMeasurementGroup]
     
     /// Qualitative evaluations
     public let qualitativeEvaluations: [CodedConcept]
@@ -104,7 +104,7 @@ public struct MeasurementReport: Sendable, Equatable {
         for item in container.contentItems {
             if let codeItem = item.asCode,
                codeItem.conceptName?.codeValue == "121058" { // Procedure Reported
-                procedures.append(codeItem.codedConcept)
+                procedures.append(codeItem.conceptCode)
             }
         }
         
@@ -115,7 +115,7 @@ public struct MeasurementReport: Sendable, Equatable {
         for item in container.contentItems {
             if let codeItem = item.asCode,
                codeItem.conceptName?.codeValue == "121049" { // Language of Content Item and Descendants
-                return codeItem.codedConcept
+                return codeItem.conceptCode
             }
         }
         return nil
@@ -141,8 +141,8 @@ public struct MeasurementReport: Sendable, Equatable {
         return entries
     }
     
-    private static func extractMeasurementGroups(from container: ContainerContentItem) throws -> [MeasurementGroup] {
-        var groups: [MeasurementGroup] = []
+    private static func extractMeasurementGroups(from container: ContainerContentItem) throws -> [ExtractedMeasurementGroup] {
+        var groups: [ExtractedMeasurementGroup] = []
         
         // Find Imaging Measurements container
         for item in container.contentItems {
@@ -164,7 +164,7 @@ public struct MeasurementReport: Sendable, Equatable {
         return groups
     }
     
-    private static func extractSingleMeasurementGroup(from container: ContainerContentItem) throws -> MeasurementGroup {
+    private static func extractSingleMeasurementGroup(from container: ContainerContentItem) throws -> ExtractedMeasurementGroup {
         var trackingIdentifier: String?
         var trackingUID: String?
         var findingType: CodedConcept?
@@ -176,25 +176,25 @@ public struct MeasurementReport: Sendable, Equatable {
             // Extract tracking identifier
             if let textItem = item.asText,
                textItem.conceptName?.codeValue == "112039" { // Tracking Identifier
-                trackingIdentifier = textItem.text
+                trackingIdentifier = textItem.textValue
             }
             
             // Extract tracking UID
-            else if let uidItem = item.asUIDReference,
+            else if let uidItem = item.asUIDRef,
                     uidItem.conceptName?.codeValue == "112040" { // Tracking Unique Identifier
-                trackingUID = uidItem.referencedUID
+                trackingUID = uidItem.uidValue
             }
             
             // Extract finding type
             else if let codeItem = item.asCode,
                     codeItem.conceptName?.codeValue == "121071" { // Finding
-                findingType = codeItem.codedConcept
+                findingType = codeItem.conceptCode
             }
             
             // Extract finding site
             else if let codeItem = item.asCode,
                     codeItem.conceptName?.codeValue == "363698007" { // Finding Site
-                findingSite = codeItem.codedConcept
+                findingSite = codeItem.conceptCode
             }
             
             // Extract numeric measurements
@@ -205,7 +205,7 @@ public struct MeasurementReport: Sendable, Equatable {
             
             // Extract qualitative evaluations (CODE items)
             else if let codeItem = item.asCode {
-                qualitativeEvaluations.append(codeItem.codedConcept)
+                qualitativeEvaluations.append(codeItem.conceptCode)
             }
         }
         
@@ -213,7 +213,7 @@ public struct MeasurementReport: Sendable, Equatable {
             throw ExtractionError.missingRequiredElement("Tracking Identifier is required for Measurement Group")
         }
         
-        return MeasurementGroup(
+        return ExtractedMeasurementGroup(
             trackingIdentifier: trackingID,
             trackingUID: trackingUID,
             findingType: findingType,
@@ -231,7 +231,7 @@ public struct MeasurementReport: Sendable, Equatable {
                let conceptName = codeItem.conceptName,
                // Common qualitative evaluation concept names
                ["121071", "121073", "121074"].contains(conceptName.codeValue) {
-                evaluations.append(codeItem.codedConcept)
+                evaluations.append(codeItem.conceptCode)
             }
         }
         
@@ -244,7 +244,7 @@ public struct MeasurementReport: Sendable, Equatable {
 // Note: ImageReference type is defined in DICOMCore.ContentItem and is reused here
 
 /// Represents a measurement group (TID 1501)
-public struct MeasurementGroup: Sendable, Equatable {
+public struct ExtractedMeasurementGroup: Sendable, Equatable {
     /// Tracking identifier for the measurement group
     public let trackingIdentifier: String
     

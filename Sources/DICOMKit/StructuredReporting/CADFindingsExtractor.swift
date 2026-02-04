@@ -107,13 +107,13 @@ public struct CADFindings: Sendable, Equatable {
                 for summaryItem in summaryContainer.contentItems {
                     if let textItem = summaryItem.asText {
                         if textItem.conceptName?.codeValue == "111001" { // Algorithm Name
-                            algorithmName = textItem.text
+                            algorithmName = textItem.textValue
                         } else if textItem.conceptName?.codeValue == "111003" { // Algorithm Version
-                            algorithmVersion = textItem.text
+                            algorithmVersion = textItem.textValue
                         }
                     } else if let codeItem = summaryItem.asCode,
                               codeItem.conceptName?.codeValue == "113878" { // Device Manufacturer
-                        manufacturer = codeItem.codedConcept.codeMeaning
+                        manufacturer = codeItem.conceptCode.codeMeaning
                     }
                 }
             }
@@ -121,9 +121,9 @@ public struct CADFindings: Sendable, Equatable {
             // Also check for algorithm name/version directly in root
             if let textItem = item.asText {
                 if textItem.conceptName?.codeValue == "111001" { // Algorithm Name
-                    algorithmName = textItem.text
+                    algorithmName = textItem.textValue
                 } else if textItem.conceptName?.codeValue == "111003" { // Algorithm Version
-                    algorithmVersion = textItem.text
+                    algorithmVersion = textItem.textValue
                 }
             }
         }
@@ -183,7 +183,7 @@ public struct CADFindings: Sendable, Equatable {
             // Extract finding type from CODE items  
             else if let codeItem = item.asCode,
                     codeItem.conceptName?.codeValue == "121071" { // Finding
-                findingType = codeItem.codedConcept
+                findingType = codeItem.conceptCode
             }
             
             // Extract spatial coordinates (location)
@@ -198,7 +198,7 @@ public struct CADFindings: Sendable, Equatable {
             
             // Extract characteristics (other CODE items)
             else if let codeItem = item.asCode {
-                characteristics.append(codeItem.codedConcept)
+                characteristics.append(codeItem.conceptCode)
             }
         }
         
@@ -354,7 +354,7 @@ public struct ExtractedCADFinding: Sendable, Equatable {
 }
 
 /// Location information for a CAD finding
-public enum CADFindingLocation: Sendable, Equatable {
+public enum CADFindingLocation: Sendable {
     /// 2D point location
     case point2D(x: Float, y: Float, imageReference: ImageReference?)
     
@@ -366,6 +366,25 @@ public enum CADFindingLocation: Sendable, Equatable {
     
     /// Elliptical region
     case ellipse(points: [(Float, Float)], imageReference: ImageReference?)
+}
+
+extension CADFindingLocation: Equatable {
+    public static func == (lhs: CADFindingLocation, rhs: CADFindingLocation) -> Bool {
+        switch (lhs, rhs) {
+        case (.point2D(let lx, let ly, let lref), .point2D(let rx, let ry, let rref)):
+            return lx == rx && ly == ry && lref == rref
+        case (.polyline(let lpoints, let lref), .polyline(let rpoints, let rref)):
+            guard lpoints.count == rpoints.count, lref == rref else { return false }
+            return zip(lpoints, rpoints).allSatisfy { $0.0 == $1.0 && $0.1 == $1.1 }
+        case (.circle(let lcx, let lcy, let lrx, let lry, let lref), .circle(let rcx, let rcy, let rrx, let rry, let rref)):
+            return lcx == rcx && lcy == rcy && lrx == rrx && lry == rry && lref == rref
+        case (.ellipse(let lpoints, let lref), .ellipse(let rpoints, let rref)):
+            guard lpoints.count == rpoints.count, lref == rref else { return false }
+            return zip(lpoints, rpoints).allSatisfy { $0.0 == $1.0 && $0.1 == $1.1 }
+        default:
+            return false
+        }
+    }
 }
 
 // Note: ImageReference type is defined in DICOMCore.ContentItem and is reused here
