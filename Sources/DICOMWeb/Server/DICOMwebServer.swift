@@ -1113,6 +1113,8 @@ public actor DICOMwebServer {
                         body: "{\"error\": \"UPS-RS not configured\"}".data(using: .utf8))
         }
         
+        // Note: aeTitle is validated but subscription management is not fully implemented yet.
+        // Full subscription tracking will be added in a future version with event delivery.
         guard let workitemUID = parameters["workitemUID"],
               let _ = parameters["aeTitle"] else {
             return .badRequest(message: "Missing workitemUID or aeTitle")
@@ -1161,12 +1163,15 @@ public actor DICOMwebServer {
     }
     
     /// Handles POST /workitems/{workitemUID}/subscribers/{aeTitle}/suspend - Suspend subscription
+    /// Handles POST /workitems/{workitemUID}/subscribers/{aeTitle}/suspend - Suspend subscription
     private func handleSuspendSubscription(parameters: [String: String], request: DICOMwebRequest) async throws -> DICOMwebResponse {
         guard upsStorage != nil else {
             return .init(statusCode: 501, headers: ["Content-Type": "application/json"],
                         body: "{\"error\": \"UPS-RS not configured\"}".data(using: .utf8))
         }
         
+        // Note: aeTitle is validated but subscription management is not fully implemented yet.
+        // Full subscription suspend tracking will be added in a future version with event delivery.
         guard let workitemUID = parameters["workitemUID"],
               let _ = parameters["aeTitle"] else {
             return .badRequest(message: "Missing workitemUID or aeTitle")
@@ -1441,22 +1446,25 @@ public actor DICOMwebServer {
     
     /// Parses a DICOM DateTime string to Date
     private func parseDateTime(_ string: String) -> Date? {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withFullDate, .withTime, .withDashSeparatorInDate, .withColonSeparatorInTime]
-        if let date = formatter.date(from: string) {
+        let isoFormatter = ISO8601DateFormatter()
+        isoFormatter.formatOptions = [.withFullDate, .withTime, .withDashSeparatorInDate, .withColonSeparatorInTime]
+        if let date = isoFormatter.date(from: string) {
             return date
         }
         
-        // Try without time component
+        // Try without time component using a simple parser
+        // DICOM date format is yyyyMMdd
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyyMMdd"
         return dateFormatter.date(from: string)
     }
     
-    /// Generates a DICOM UID
+    /// Generates a DICOM UID using the 2.25 root and timestamp/random components
     private func generateUID() -> String {
-        let uuid = UUID().uuidString.replacingOccurrences(of: "-", with: "")
-        return "2.25.\(uuid.prefix(32))"
+        // Use timestamp and random for uniqueness
+        let timestamp = UInt64(Date().timeIntervalSince1970 * 1000)
+        let random = UInt64.random(in: 0..<UInt64.max)
+        return "2.25.\(timestamp)\(random % 10000000000)"
     }
     
     // MARK: - Capabilities
