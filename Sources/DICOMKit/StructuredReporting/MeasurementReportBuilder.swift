@@ -21,7 +21,7 @@ import DICOMCore
 /// let report = try MeasurementReportBuilder()
 ///     .withPatientID("12345")
 ///     .withPatientName("Doe^John")
-///     .withDocumentTitle(.imagingMeasurementReport)
+///     .withDocumentTitle(MeasurementReportDocumentTitle.imagingMeasurementReport)
 ///     .addImageLibraryEntry(
 ///         sopClassUID: "1.2.840.10008.5.1.4.1.1.2",
 ///         sopInstanceUID: "1.2.3.4.5.6.7.8.9"
@@ -29,12 +29,9 @@ import DICOMCore
 ///     .addMeasurementGroup(
 ///         trackingIdentifier: "Lesion 1",
 ///         trackingUID: "1.2.3.4.5.6.7.8.10"
-///     ) { group in
-///         group.addMeasurement(
-///             conceptName: CodedConcept.longAxis,
-///             value: 25.5,
-///             units: UCUMUnit.millimeter.concept
-///         )
+///     ) {
+///         MeasurementGroupContentHelper.longAxisMM(value: 25.5)
+///         MeasurementGroupContentHelper.shortAxisMM(value: 18.2)
 ///     }
 ///     .build()
 /// ```
