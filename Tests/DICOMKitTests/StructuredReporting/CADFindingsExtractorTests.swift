@@ -94,8 +94,8 @@ final class CADFindingsExtractorTests: XCTestCase {
         
         let findings = try CADFindings.extract(from: parsed)
         
-        XCTAssertEqual(findings.cadType, .mammography)
-        XCTAssertEqual(findings.document.sopClassUID, SRDocumentType.mammographyCADSR.sopClassUID)
+        XCTAssertEqual(findings.cadType, .chest)
+        XCTAssertEqual(findings.document.sopClassUID, SRDocumentType.chestCADSR.sopClassUID)
     }
     
     // MARK: - CAD Processing Info Tests
@@ -573,7 +573,7 @@ final class CADFindingsExtractorTests: XCTestCase {
         
         let findings = try CADFindings.extract(from: parsed)
         
-        XCTAssertEqual(findings.cadType, .mammography)
+        XCTAssertEqual(findings.cadType, .chest)
         XCTAssertEqual(findings.findings.count, 1)
         XCTAssertNotNil(findings.findings[0].findingType)
     }
@@ -689,7 +689,7 @@ final class CADFindingsExtractorTests: XCTestCase {
         let parsed = try serializeAndParse(original)
         let extracted = try CADFindings.extract(from: parsed)
         
-        XCTAssertEqual(extracted.cadType, .mammography)
+        XCTAssertEqual(extracted.cadType, .chest)
         XCTAssertEqual(extracted.document.patientID, "CHEST-2024-001")
         XCTAssertEqual(extracted.processingInfo.algorithmName, "LungCAD Pro")
         XCTAssertEqual(extracted.findings.count, 2)

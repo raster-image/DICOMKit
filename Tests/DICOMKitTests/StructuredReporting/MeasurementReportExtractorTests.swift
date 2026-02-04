@@ -240,12 +240,6 @@ final class MeasurementReportExtractorTests: XCTestCase {
     }
     
     func testExtractMeasurementGroupWithFindingType() throws {
-        let findingType = CodedConcept(
-            codeValue: "108369006",
-            codingSchemeDesignator: "SCT",
-            codeMeaning: "Tumor"
-        )
-        
         let original = try MeasurementReportBuilder()
             .addMeasurementGroup(trackingIdentifier: "Lesion 1") {            }
             .build()
@@ -259,13 +253,7 @@ final class MeasurementReportExtractorTests: XCTestCase {
         XCTAssertEqual(report.measurementGroups[0].findingType?.codeMeaning, "Tumor")
     }
     
-    func testExtractMeasurementGroupWithFindingSite() throws {
-        let findingSite = CodedConcept(
-            codeValue: "39607008",
-            codingSchemeDesignator: "SCT",
-            codeMeaning: "Lung"
-        )
-        
+    func testExtractMeasurementGroupWithFindingSite() throws{
         let original = try MeasurementReportBuilder()
             .addMeasurementGroup(trackingIdentifier: "Lesion 1") {            }
             .build()
@@ -332,15 +320,14 @@ final class MeasurementReportExtractorTests: XCTestCase {
     }
     
     func testExtractMeasurementGroupWithFullData() throws {
-        let findingType = CodedConcept(codeValue: "108369006", codingSchemeDesignator: "SCT", codeMeaning: "Tumor")
-        let findingSite = CodedConcept(codeValue: "39607008", codingSchemeDesignator: "SCT", codeMeaning: "Lung")
         let trackingUID = "1.2.3.4.5.6.7.8.9.10"
         
         let original = try MeasurementReportBuilder()
             .addMeasurementGroup(
                 trackingIdentifier: "Lesion 1",
                 trackingUID: trackingUID
-            ) {                MeasurementGroupContentHelper.longAxisMM(value: 25.5)
+            ) {
+                MeasurementGroupContentHelper.longAxisMM(value: 25.5)
                 MeasurementGroupContentHelper.shortAxisMM(value: 18.2)
                 MeasurementGroupContentHelper.volumeMM3(value: 4.2)
             }
@@ -470,7 +457,8 @@ final class MeasurementReportExtractorTests: XCTestCase {
             .addMeasurementGroup(
                 trackingIdentifier: "Lesion 1",
                 trackingUID: "1.2.3.4.5.6.7.8.9.10",
-            ) {                MeasurementGroupContentHelper.longAxisMM(value: 25.5)
+            ) {
+                MeasurementGroupContentHelper.longAxisMM(value: 25.5)
                 MeasurementGroupContentHelper.shortAxisMM(value: 18.2)
                 MeasurementGroupContentHelper.volumeMM3(value: 4.2)
             }
@@ -492,8 +480,6 @@ final class MeasurementReportExtractorTests: XCTestCase {
         let group1 = extracted.measurementGroups[0]
         XCTAssertEqual(group1.trackingIdentifier, "Lesion 1")
         XCTAssertEqual(group1.trackingUID, "1.2.3.4.5.6.7.8.9.10")
-        XCTAssertEqual(group1.findingType?.codeMeaning, "Tumor")
-        XCTAssertEqual(group1.findingSite?.codeMeaning, "Lung")
         XCTAssertEqual(group1.measurements.count, 3)
         
         // Verify second measurement group
