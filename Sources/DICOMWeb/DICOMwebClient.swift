@@ -1733,20 +1733,20 @@ extension DICOMwebClient {
     /// Subscribes to workitem events
     ///
     /// - Parameters:
-    ///   - uid: The workitem's SOP Instance UID (or nil for global subscription)
+    ///   - workitemUID: The workitem's SOP Instance UID (or nil for global subscription)
     ///   - aeTitle: The subscribing AE Title
     ///   - deletionLock: Whether to lock the workitem from deletion while subscribed
     /// - Throws: DICOMwebError on failure
     ///
     /// Reference: PS3.18 Section 11.8 - Subscribe Transaction
     public func subscribeToWorkitem(
-        uid: String?,
+        workitemUID: String?,
         aeTitle: String,
         deletionLock: Bool = false
     ) async throws {
         let url: URL
-        if let uid = uid {
-            url = urlBuilder.workitemSubscriptionURL(workitemUID: uid, aeTitle: aeTitle)
+        if let workitemUID = workitemUID {
+            url = urlBuilder.workitemSubscriptionURL(workitemUID: workitemUID, aeTitle: aeTitle)
         } else {
             url = urlBuilder.globalWorkitemSubscriptionURL(aeTitle: aeTitle)
         }
@@ -1766,8 +1766,8 @@ extension DICOMwebClient {
             _ = try await httpClient.execute(request)
         } catch let error as DICOMwebError {
             if case .notFound = error {
-                if let uid = uid {
-                    throw UPSError.workitemNotFound(uid: uid)
+                if let workitemUID = workitemUID {
+                    throw UPSError.workitemNotFound(uid: workitemUID)
                 }
             }
             throw error
@@ -1781,21 +1781,21 @@ extension DICOMwebClient {
     ///   - deletionLock: Whether to lock workitems from deletion while subscribed
     /// - Throws: DICOMwebError on failure
     public func subscribeToAllWorkitems(aeTitle: String, deletionLock: Bool = false) async throws {
-        try await subscribeToWorkitem(uid: nil, aeTitle: aeTitle, deletionLock: deletionLock)
+        try await subscribeToWorkitem(workitemUID: nil, aeTitle: aeTitle, deletionLock: deletionLock)
     }
     
     /// Unsubscribes from workitem events
     ///
     /// - Parameters:
-    ///   - uid: The workitem's SOP Instance UID (or nil for global subscription)
+    ///   - workitemUID: The workitem's SOP Instance UID (or nil for global subscription)
     ///   - aeTitle: The subscribing AE Title
     /// - Throws: DICOMwebError on failure
     ///
     /// Reference: PS3.18 Section 11.9 - Unsubscribe Transaction
-    public func unsubscribeFromWorkitem(uid: String?, aeTitle: String) async throws {
+    public func unsubscribeFromWorkitem(workitemUID: String?, aeTitle: String) async throws {
         let url: URL
-        if let uid = uid {
-            url = urlBuilder.workitemSubscriptionURL(workitemUID: uid, aeTitle: aeTitle)
+        if let workitemUID = workitemUID {
+            url = urlBuilder.workitemSubscriptionURL(workitemUID: workitemUID, aeTitle: aeTitle)
         } else {
             url = urlBuilder.globalWorkitemSubscriptionURL(aeTitle: aeTitle)
         }
@@ -1822,7 +1822,7 @@ extension DICOMwebClient {
     /// - Parameter aeTitle: The subscribing AE Title
     /// - Throws: DICOMwebError on failure
     public func unsubscribeFromAllWorkitems(aeTitle: String) async throws {
-        try await unsubscribeFromWorkitem(uid: nil, aeTitle: aeTitle)
+        try await unsubscribeFromWorkitem(workitemUID: nil, aeTitle: aeTitle)
     }
     
     /// Suspends a workitem subscription
