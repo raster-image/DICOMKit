@@ -801,7 +801,11 @@ public struct SRDocumentBuilder: Sendable {
             try validate()
         }
         
-        // Generate UIDs if not provided
+        // Generate UIDs if not provided.
+        // Note: Auto-generated UIDs use UIDGenerator with the default UID root (1.2.276.0.7230010.3).
+        // In production environments with specific UID root requirements, developers should
+        // provide their own UIDs using withSOPInstanceUID(), withStudyInstanceUID(), and
+        // withSeriesInstanceUID() methods to ensure compliance with organizational policies.
         let finalSOPInstanceUID = sopInstanceUID ?? UIDGenerator.generateUID().value
         let finalStudyInstanceUID = studyInstanceUID ?? UIDGenerator.generateUID().value
         let finalSeriesInstanceUID = seriesInstanceUID ?? UIDGenerator.generateUID().value

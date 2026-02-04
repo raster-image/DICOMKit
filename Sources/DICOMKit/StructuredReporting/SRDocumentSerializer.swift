@@ -533,12 +533,12 @@ public struct SRDocumentSerializer: Sendable {
         // Floating Point Value (0040,A161) - optional high precision values
         if let floatValues = item.floatingPointValues {
             let writer = DICOMWriter()
-            let valueData = writer.serializeFloat64s(floatValues)
+            let float64Data = writer.serializeFloat64s(floatValues)
             measuredValueElements.append(DataElement(
                 tag: .floatingPointValue,
                 vr: .FD,
-                length: UInt32(valueData.count),
-                valueData: valueData
+                length: UInt32(float64Data.count),
+                valueData: float64Data
             ))
         }
         
@@ -610,12 +610,12 @@ public struct SRDocumentSerializer: Sendable {
         if let segmentNumbers = imageItem.imageReference.segmentNumbers, !segmentNumbers.isEmpty {
             let writer = DICOMWriter()
             let values = segmentNumbers.map { UInt16($0) }
-            let valueData = writer.serializeUInt16s(values)
+            let segmentData = writer.serializeUInt16s(values)
             elements.append(DataElement(
                 tag: .referencedSegmentNumber,
                 vr: .US,
-                length: UInt32(valueData.count),
-                valueData: valueData
+                length: UInt32(segmentData.count),
+                valueData: segmentData
             ))
         }
         
@@ -710,12 +710,12 @@ public struct SRDocumentSerializer: Sendable {
         // Referenced Sample Positions (0040,A132) - UL
         if let samplePositions = item.referencedSamplePositions, !samplePositions.isEmpty {
             let writer = DICOMWriter()
-            let valueData = writer.serializeUInt32s(samplePositions)
+            let samplePositionsData = writer.serializeUInt32s(samplePositions)
             elements.append(DataElement(
                 tag: .referencedSamplePositions,
                 vr: .UL,
-                length: UInt32(valueData.count),
-                valueData: valueData
+                length: UInt32(samplePositionsData.count),
+                valueData: samplePositionsData
             ))
         }
         
