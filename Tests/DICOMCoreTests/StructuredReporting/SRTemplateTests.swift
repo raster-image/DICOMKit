@@ -708,14 +708,13 @@ struct TemplateDetectorTests {
         #expect(detector != nil)
     }
     
-    @Test("Detect template from empty content returns nil")
+    @Test("Detect template from empty content")
     func testDetectFromEmptyContent() {
         let detector = TemplateDetector()
-        let result = detector.detectTemplate([])
+        _ = detector.detectTemplate([])
         
         // Empty content might still match templates with all optional rows
-        // So we just verify the API works
-        #expect(result == nil || result != nil)
+        // This test verifies the API doesn't crash with empty input
     }
     
     @Test("Detect templates returns sorted results")

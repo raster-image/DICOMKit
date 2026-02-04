@@ -427,11 +427,10 @@ public struct TemplateValidator: Sendable {
             }
             
             // Validate relationship type
-            if let expectedRelationship = row.relationshipType as RelationshipType?,
-               item.relationshipType != expectedRelationship {
+            if item.relationshipType != row.relationshipType {
                 violations.append(.relationshipMismatch(
                     rowID: row.rowID,
-                    expected: expectedRelationship,
+                    expected: row.relationshipType,
                     actual: item.relationshipType,
                     path: itemPath
                 ))
