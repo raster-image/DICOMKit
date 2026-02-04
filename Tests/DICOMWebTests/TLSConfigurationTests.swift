@@ -236,7 +236,7 @@ struct DICOMwebTLSConfigurationTests {
             certificatePath: certPath,
             privateKeyPath: keyPath,
             minimumTLSVersion: .v13,
-            maximumTLSVersion: .v12 // Invalid: min > max
+            maximumTLSVersion: .v12 // Invalid: minimum > maximum
         )
         
         #expect(throws: DICOMwebServerConfiguration.TLSConfigurationError.self) {
