@@ -1732,7 +1732,7 @@ This milestone is divided into modular sub-milestones based on complexity, allow
   - [ ] Text Value (0040,A160) for TEXT items
   - [ ] Concept Code Sequence (0040,A168) for CODE items
   - [ ] Measured Value Sequence (0040,A300) for NUM items
-  - [ ] Numeric Value (0040,A30A) and Unit Code (004,08EA)
+  - [ ] Numeric Value (0040,A30A) and Unit Code (0040,08EA)
   - [ ] Date/Time/DateTime Value parsing
   - [ ] Person Name (0040,A123) for PNAME
   - [ ] UID (0040,A124) for UIDREF
@@ -2129,8 +2129,9 @@ This milestone is divided into modular sub-milestones based on complexity, allow
 - Reference: PS3.16 Annex A - SR Templates
 - Reference: PS3.16 Section 5 - Template Specifications
 - Templates define content structure, not just allowed values
-- Some templates include others (e.g., TID 1500 includes TID 300)
+- Some templates include others (e.g., TID 1500 in 9.8 includes TID 300 from 9.7)
 - Templates may have user-extensible sections
+- Core measurement templates (TID 300, 1400-1420) are implemented in 9.7 as building blocks
 
 #### Acceptance Criteria
 - [ ] Core measurement templates are implemented
