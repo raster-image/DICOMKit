@@ -194,44 +194,44 @@ public enum AIDetectionLocation: Sendable, Equatable {
     // MARK: - 2D Locations
     
     /// Point location in 2D image space
-    case point2D(x: Double, y: Double, imageReference: ImageReference)
+    case point2D(x: Double, y: Double, imageReference: AIImageReference)
     
     /// Bounding box in 2D image space
-    case boundingBox2D(x: Double, y: Double, width: Double, height: Double, imageReference: ImageReference)
+    case boundingBox2D(x: Double, y: Double, width: Double, height: Double, imageReference: AIImageReference)
     
     /// Polygon region in 2D image space
-    case polygon2D(points: [Double], imageReference: ImageReference)
+    case polygon2D(points: [Double], imageReference: AIImageReference)
     
     /// Circle in 2D image space
-    case circle2D(centerX: Double, centerY: Double, radius: Double, imageReference: ImageReference)
+    case circle2D(centerX: Double, centerY: Double, radius: Double, imageReference: AIImageReference)
     
     // MARK: - 3D Locations
     
     /// Point location in 3D patient coordinate space
-    case point3D(x: Double, y: Double, z: Double, frameOfReferenceUID: String, imageReference: ImageReference?)
+    case point3D(x: Double, y: Double, z: Double, frameOfReferenceUID: String, imageReference: AIImageReference?)
     
     /// Bounding box in 3D patient coordinate space
     case boundingBox3D(
         x: Double, y: Double, z: Double,
         width: Double, height: Double, depth: Double,
         frameOfReferenceUID: String,
-        imageReference: ImageReference?
+        imageReference: AIImageReference?
     )
     
     /// Polygon in 3D patient coordinate space
-    case polygon3D(points: [Double], frameOfReferenceUID: String, imageReference: ImageReference?)
+    case polygon3D(points: [Double], frameOfReferenceUID: String, imageReference: AIImageReference?)
     
     /// Ellipsoid in 3D patient coordinate space
     case ellipsoid3D(
         centerX: Double, centerY: Double, centerZ: Double,
         radiusX: Double, radiusY: Double, radiusZ: Double,
         frameOfReferenceUID: String,
-        imageReference: ImageReference?
+        imageReference: AIImageReference?
     )
 }
 
 /// Reference to a DICOM image that the detection relates to
-public struct ImageReference: Sendable, Equatable {
+public struct AIImageReference: Sendable, Equatable {
     /// SOP Class UID of the referenced image
     public let sopClassUID: String
     
