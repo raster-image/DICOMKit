@@ -46,11 +46,13 @@ public struct ContentTreeIterator: IteratorProtocol, Sendable {
         let (item, depth) = stack.removeLast()
         
         // If this item has children and we haven't exceeded max depth, add them to the stack
-        if let container = item.asContainer,
-           maxDepth == nil || depth < maxDepth! {
-            // Add children in reverse order for proper traversal order
-            for child in container.contentItems.reversed() {
-                stack.append((child, depth + 1))
+        if let container = item.asContainer {
+            let withinDepth = maxDepth.map { depth < $0 } ?? true
+            if withinDepth {
+                // Add children in reverse order for proper traversal order
+                for child in container.contentItems.reversed() {
+                    stack.append((child, depth + 1))
+                }
             }
         }
         
@@ -99,10 +101,12 @@ public struct BreadthFirstIterator: IteratorProtocol, Sendable {
         currentIndex += 1
         
         // If this item has children and we haven't exceeded max depth, add them to the queue
-        if let container = item.asContainer,
-           maxDepth == nil || depth < maxDepth! {
-            for child in container.contentItems {
-                queue.append((child, depth + 1))
+        if let container = item.asContainer {
+            let withinDepth = maxDepth.map { depth < $0 } ?? true
+            if withinDepth {
+                for child in container.contentItems {
+                    queue.append((child, depth + 1))
+                }
             }
         }
         
