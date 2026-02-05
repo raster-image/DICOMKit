@@ -76,9 +76,7 @@ struct ViewerContainerView: View {
                 presentationStates: viewModel.availablePresentationStates,
                 selectedPresentationState: Binding(
                     get: { viewModel.presentationState },
-                    set: { gsps in
-                        Task { await viewModel.applyPresentationState(gsps) }
-                    }
+                    set: { _ in } // Selection handled by onSelect callback
                 ),
                 onSelect: { gsps in
                     Task { await viewModel.applyPresentationState(gsps) }

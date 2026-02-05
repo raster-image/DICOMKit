@@ -166,6 +166,13 @@ public struct PresentationStateInfo: Identifiable, Sendable {
 
 /// Extension for formatted date display
 extension DICOMDate {
+    /// Formats the DICOM date for display in the user interface
+    ///
+    /// Uses the system's medium date style (e.g., "Jun 15, 2024" in US locale).
+    /// If the date cannot be converted to a Foundation Date, falls back to
+    /// ISO 8601 format (YYYY-MM-DD).
+    ///
+    /// - Returns: A localized date string, or ISO 8601 format as fallback
     func formatted() -> String {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
@@ -181,6 +188,7 @@ extension DICOMDate {
             return formatter.string(from: date)
         }
         
+        // Fallback to ISO 8601 format
         return "\(year)-\(String(format: "%02d", month))-\(String(format: "%02d", day))"
     }
 }

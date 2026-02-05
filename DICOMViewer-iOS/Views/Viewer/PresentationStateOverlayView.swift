@@ -365,9 +365,14 @@ struct AnnotationOverlayView: View {
             var path = Path()
             path.addEllipse(in: CGRect(x: -majorRadius, y: -minorRadius, width: majorRadius * 2, height: minorRadius * 2))
             
-            let transform = CGAffineTransform(translationX: centerX, y: centerY)
-                .rotated(by: angle)
-            path = path.applying(transform)
+            // Apply rotation first, then translation to correctly position the rotated ellipse
+            let transform = CGAffineTransform(rotationAngle: angle)
+                .translatedBy(x: centerX / cos(angle != 0 ? angle : 1), y: centerY / sin(angle != 0 ? angle : 1))
+            // Simpler approach: concatenate transforms
+            let rotationTransform = CGAffineTransform(rotationAngle: angle)
+            let translationTransform = CGAffineTransform(translationX: centerX, y: centerY)
+            let combinedTransform = rotationTransform.concatenating(translationTransform)
+            path = path.applying(combinedTransform)
             
             if graphic.filled {
                 context.fill(path, with: .color(color.opacity(0.3)))

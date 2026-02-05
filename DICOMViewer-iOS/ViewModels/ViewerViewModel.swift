@@ -496,7 +496,9 @@ final class ViewerViewModel {
     /// - Parameter gsps: The presentation state to apply (nil to remove)
     func applyPresentationState(_ gsps: GrayscalePresentationState?) async {
         // Store original window settings before first GSPS application
-        if presentationState == nil && gsps != nil && originalWindowSettings == nil {
+        // Only save if we haven't saved before and we're applying a new presentation state
+        let shouldSaveOriginal = originalWindowSettings == nil && presentationState == nil && gsps != nil
+        if shouldSaveOriginal {
             originalWindowSettings = WindowSettings(center: windowCenter, width: windowWidth)
         }
         
