@@ -17,7 +17,7 @@ func example1_basicReading() throws {
     // Replace with path to your DICOM file
     let fileURL = URL(fileURLWithPath: "/path/to/your/file.dcm")
     
-    let dicomFile = try DICOMFile(contentsOf: fileURL)
+    let dicomFile = try DICOMFile.read(from: fileURL)
     
     // Access file meta information
     print("Transfer Syntax: \(dicomFile.transferSyntax)")
@@ -31,19 +31,25 @@ func example2_errorHandling() {
     let fileURL = URL(fileURLWithPath: "/path/to/your/file.dcm")
     
     do {
-        let file = try DICOMFile(contentsOf: fileURL)
+        let file = try DICOMFile.read(from: fileURL)
         print("Successfully loaded DICOM file")
         print("SOP Class: \(file.sopClassUID)")
     } catch let error as DICOMError {
         switch error {
-        case .invalidFile:
-            print("Error: Not a valid DICOM file")
+        case .invalidPreamble:
+            print("Error: Invalid DICOM preamble")
+        case .invalidDICMPrefix:
+            print("Error: Missing 'DICM' prefix")
         case .unsupportedTransferSyntax(let uid):
             print("Error: Unsupported transfer syntax: \(uid)")
-        case .corruptedData:
-            print("Error: File data is corrupted")
-        default:
-            print("Error: \(error.localizedDescription)")
+        case .unexpectedEndOfData:
+            print("Error: File appears truncated")
+        case .invalidVR(let vr):
+            print("Error: Invalid value representation: \(vr)")
+        case .invalidTag:
+            print("Error: Invalid tag structure")
+        case .parsingFailed(let message):
+            print("Error: Parsing failed - \(message)")
         }
     } catch {
         print("Unexpected error: \(error)")
@@ -66,7 +72,7 @@ func example3_multipleFiles() throws {
     print("Found \(files.count) DICOM files")
     
     for fileURL in files {
-        if let file = try? DICOMFile(contentsOf: fileURL) {
+        if let file = try? DICOMFile.read(from: fileURL) {
             print("Loaded: \(file.sopInstanceUID)")
         } else {
             print("Failed to load: \(fileURL.lastPathComponent)")
@@ -87,7 +93,7 @@ func example4_checkValidity() throws {
     
     // Attempt to read
     do {
-        let file = try DICOMFile(contentsOf: fileURL)
+        let file = try DICOMFile.read(from: fileURL)
         print("✅ Valid DICOM file")
         print("   Transfer Syntax: \(file.transferSyntax)")
         
@@ -141,20 +147,25 @@ func example5_readingFromData() throws {
  • transferSyntax     - Transfer syntax UID
  • sopClassUID        - SOP Class UID
  • sopInstanceUID     - SOP Instance UID
- • elements           - All data elements in the file
+ • dataSet            - DataSet containing all elements
  • pixelData          - Pixel data (if present)
  
- Common Initializers:
+ Common Methods:
  
- • init(contentsOf:)  - Read from file URL
- • init(data:)        - Parse from Data
+ • .read(from: URL)           - Read from file URL
+ • .read(from: Data)          - Parse from Data
+ • .read(from:force:)         - Read with legacy support
+ • .read(from:force:options:) - Read with parsing options
  
  Common Error Types:
  
- • .invalidFile              - Not a DICOM file
+ • .invalidPreamble          - Missing 128-byte preamble
+ • .invalidDICMPrefix        - Missing "DICM" at offset 128
+ • .unexpectedEndOfData      - File truncated
+ • .invalidVR(String)        - Unknown Value Representation
  • .unsupportedTransferSyntax - Transfer syntax not supported
- • .corruptedData            - File is corrupted
- • .missingRequiredTag       - Required tag missing
+ • .invalidTag               - Malformed tag
+ • .parsingFailed(String)    - General parsing error
  
  Tips:
  
