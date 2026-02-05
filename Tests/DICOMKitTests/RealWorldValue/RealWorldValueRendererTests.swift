@@ -105,7 +105,8 @@ final class RealWorldValueRendererTests: XCTestCase {
         let renderer = RealWorldValueRenderer(lut: lut)
         
         let result = await renderer.apply(to: 1024)
-        XCTAssertEqual(result, 0.0, accuracy: 0.001)
+        XCTAssertNotNil(result)
+        XCTAssertEqual(result!, 0.0, accuracy: 0.001)
     }
     
     func test_renderer_applyToDoubleValue_transformsCorrectly() async {
@@ -117,7 +118,8 @@ final class RealWorldValueRendererTests: XCTestCase {
         let renderer = RealWorldValueRenderer(lut: lut)
         
         let result = await renderer.apply(to: 5.5)
-        XCTAssertEqual(result, 21.0, accuracy: 0.001)
+        XCTAssertNotNil(result)
+        XCTAssertEqual(result!, 21.0, accuracy: 0.001)
     }
     
     func test_renderer_applyToIntArray_transformsCorrectly() async {
@@ -172,8 +174,10 @@ final class RealWorldValueRendererTests: XCTestCase {
         let result0 = await renderer.apply(to: 1024, forFrame: 0)
         let result10 = await renderer.apply(to: 1024, forFrame: 10)
         
-        XCTAssertEqual(result0, 0.0, accuracy: 0.001)
-        XCTAssertEqual(result10, 0.0, accuracy: 0.001)
+        XCTAssertNotNil(result0)
+        XCTAssertNotNil(result10)
+        XCTAssertEqual(result0!, 0.0, accuracy: 0.001)
+        XCTAssertEqual(result10!, 0.0, accuracy: 0.001)
     }
     
     func test_renderer_applyForFrame_withFirstFrameScope_usesLUTOnlyForFirstFrame() async {
@@ -188,8 +192,10 @@ final class RealWorldValueRendererTests: XCTestCase {
         let result0 = await renderer.apply(to: 1024, forFrame: 0)
         let result1 = await renderer.apply(to: 1024, forFrame: 1)
         
-        XCTAssertEqual(result0, 0.0, accuracy: 0.001)
-        XCTAssertEqual(result1, 0.0, accuracy: 0.001) // Falls back to selected LUT
+        XCTAssertNotNil(result0)
+        XCTAssertNotNil(result1)
+        XCTAssertEqual(result0!, 0.0, accuracy: 0.001)
+        XCTAssertEqual(result1!, 0.0, accuracy: 0.001) // Falls back to selected LUT
     }
     
     func test_renderer_applyForFrame_withSpecificFrames_usesLUTForMatchingFrames() async {

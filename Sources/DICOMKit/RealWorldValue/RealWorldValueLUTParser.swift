@@ -74,33 +74,33 @@ public struct RealWorldValueLUTParser {
         _ functionalGroup: SequenceItem
     ) -> [RealWorldValueLUT]? {
         // Real World Value Mapping Sequence (0040,9096)
-        guard let rwvSequence = functionalGroup.dataSet.sequence(for: Tag(group: 0x0040, element: 0x9096)) else {
+        guard let rwvSequence = functionalGroup[Tag(group: 0x0040, element: 0x9096)]?.sequenceItems else {
             return nil
         }
         
         return rwvSequence.compactMap { item in
-            parseRWVMappingItem(item.dataSet)
+            parseRWVMappingItem(item)
         }
     }
     
     /// Parse a single Real World Value Mapping item
     ///
-    /// - Parameter dataSet: Data set from Real World Value Mapping Sequence item
+    /// - Parameter item: Sequence item from Real World Value Mapping Sequence
     /// - Returns: RealWorldValueLUT, or nil if parsing fails
-    private static func parseRWVMappingItem(_ dataSet: DataSet) -> RealWorldValueLUT? {
+    private static func parseRWVMappingItem(_ item: SequenceItem) -> RealWorldValueLUT? {
         // LUT Label (0040,9210)
-        let label = dataSet.string(for: Tag(group: 0x0040, element: 0x9210))
+        let label = item.string(for: Tag(group: 0x0040, element: 0x9210))
         
         // LUT Explanation (0040,9211)
-        let explanation = dataSet.string(for: Tag(group: 0x0040, element: 0x9211))
+        let explanation = item.string(for: Tag(group: 0x0040, element: 0x9211))
         
         // Measurement Units Code Sequence (0040,08EA)
-        guard let unitsSequence = dataSet.sequence(for: Tag(group: 0x0040, element: 0x08EA)),
+        guard let unitsSequence = item[Tag(group: 0x0040, element: 0x08EA)]?.sequenceItems,
               let unitsItem = unitsSequence.first else {
             return nil
         }
         
-        guard let units = parseCodedConcept(from: unitsItem.dataSet) else {
+        guard let units = parseCodedConcept(from: unitsItem) else {
             return nil
         }
         
@@ -112,9 +112,9 @@ public struct RealWorldValueLUTParser {
         
         // Quantity Definition Sequence (0040,9220) - optional
         let quantityDefinition: DICOMCore.CodedConcept?
-        if let quantitySequence = dataSet.sequence(for: Tag(group: 0x0040, element: 0x9220)),
+        if let quantitySequence = item[Tag(group: 0x0040, element: 0x9220)]?.sequenceItems,
            let quantityItem = quantitySequence.first {
-            quantityDefinition = parseCodedConcept(from: quantityItem.dataSet)
+            quantityDefinition = parseCodedConcept(from: quantityItem)
         } else {
             quantityDefinition = nil
         }
@@ -123,14 +123,15 @@ public struct RealWorldValueLUTParser {
         let transformation: RealWorldValueLUT.Transformation
         
         // Try linear transformation first (Real World Value Slope/Intercept)
-        if let slope = dataSet.float64s(for: Tag(group: 0x0040, element: 0x9225))?.first,
-           let intercept = dataSet.float64s(for: Tag(group: 0x0040, element: 0x9224))?.first {
+        // Real World Value Slope (0040,9225) and Intercept (0040,9224)
+        if let slope = item[Tag(group: 0x0040, element: 0x9225)]?.float64Value,
+           let intercept = item[Tag(group: 0x0040, element: 0x9224)]?.float64Value {
             transformation = .linear(slope: slope, intercept: intercept)
         }
         // Try LUT Data
-        else if let firstValueMapped = dataSet.float64s(for: Tag(group: 0x0040, element: 0x9212))?.first,
-                let lastValueMapped = dataSet.float64s(for: Tag(group: 0x0040, element: 0x9213))?.first,
-                let lutData = dataSet.float64s(for: Tag(group: 0x0040, element: 0x9216)) {
+        else if let firstValueMapped = item[Tag(group: 0x0040, element: 0x9212)]?.float64Value,
+                let lastValueMapped = item[Tag(group: 0x0040, element: 0x9213)]?.float64Value,
+                let lutData = item[Tag(group: 0x0040, element: 0x9216)]?.float64Values {
             let descriptor = RealWorldValueLUT.LUTDescriptor(
                 firstValueMapped: firstValueMapped,
                 lastValueMapped: lastValueMapped
@@ -201,14 +202,14 @@ public struct RealWorldValueLUTParser {
     
     // MARK: - Helper Methods
     
-    /// Parse a coded concept from a data set
+    /// Parse a coded concept from a sequence item
     ///
-    /// - Parameter dataSet: Data set containing Code Value, Coding Scheme Designator, Code Meaning
+    /// - Parameter item: Sequence item containing Code Value, Coding Scheme Designator, Code Meaning
     /// - Returns: CodedConcept, or nil if required fields are missing
-    private static func parseCodedConcept(from dataSet: DataSet) -> DICOMCore.CodedConcept? {
-        guard let codeValue = dataSet.string(for: Tag.codeValue),
-              let codingScheme = dataSet.string(for: Tag.codingSchemeDesignator),
-              let codeMeaning = dataSet.string(for: Tag.codeMeaning) else {
+    private static func parseCodedConcept(from item: SequenceItem) -> DICOMCore.CodedConcept? {
+        guard let codeValue = item.string(for: Tag.codeValue),
+              let codingScheme = item.string(for: Tag.codingSchemeDesignator),
+              let codeMeaning = item.string(for: Tag.codeMeaning) else {
             return nil
         }
         
