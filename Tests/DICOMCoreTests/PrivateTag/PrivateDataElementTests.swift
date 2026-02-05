@@ -87,6 +87,6 @@ final class PrivateTagErrorTests: XCTestCase {
         
         let desc = error.description
         XCTAssertTrue(desc.contains("0x05"))
-        XCTAssertTrue(desc.contains("0x10-0xFF"))
+        XCTAssertTrue(desc.contains("Invalid private tag offset"))
     }
 }

@@ -134,7 +134,7 @@ extension PrivateTagError: CustomStringConvertible {
         case .noBlocksAvailable(let group):
             return "No private creator blocks available in group \(String(format: "0x%04X", group))"
         case .invalidOffset(let offset):
-            return "Invalid private tag offset \(String(format: "0x%02X", offset)) (must be 0x10-0xFF)"
+            return "Invalid private tag offset \(String(format: "0x%02X", offset))"
         }
     }
 }
