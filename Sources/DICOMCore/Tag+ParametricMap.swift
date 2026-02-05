@@ -54,8 +54,8 @@ extension Tag {
     public static let realWorldValueLUTData = Tag(group: 0x0040, element: 0x9212)
     
     /// LUT Explanation (0028,3003)
-    /// Free text explanation of the LUT
-    public static let lutExplanation = Tag(group: 0x0028, element: 0x3003)
+    /// Already defined elsewhere - Free text explanation of the LUT
+    // public static let lutExplanation = Tag(group: 0x0028, element: 0x3003)
     
     /// Real World Value First Value Mapped (0040,9216)
     /// First pixel value mapped in the LUT
@@ -74,8 +74,9 @@ extension Tag {
     public static let realWorldValueSlope = Tag(group: 0x0040, element: 0x9225)
     
     /// Measurement Units Code Sequence (0040,08EA)
+    /// Already defined in Tag+StructuredReporting
     /// Units of measurement as coded entry (UCUM)
-    public static let measurementUnitsCodeSequence = Tag(group: 0x0040, element: 0x08EA)
+    // public static let measurementUnitsCodeSequence = Tag(group: 0x0040, element: 0x08EA)
     
     /// Quantity Definition Sequence (0040,9220)
     /// Defines the physical quantity being mapped
@@ -145,16 +146,20 @@ extension Tag {
     // MARK: - PET-specific Tags (for SUV calculation)
     
     /// Radiopharmaceutical Information Sequence (0054,0016)
-    public static let radiopharmaceuticalInformationSequence = Tag(group: 0x0054, element: 0x0016)
+    /// Already defined in Tag+ModalitySpecific
+    // public static let radiopharmaceuticalInformationSequence = Tag(group: 0x0054, element: 0x0016)
     
     /// Radionuclide Total Dose (0018,1074)
-    public static let radionuclideTotalDose = Tag(group: 0x0018, element: 0x1074)
+    /// Already defined in Tag+ModalitySpecific
+    // public static let radionuclideTotalDose = Tag(group: 0x0018, element: 0x1074)
     
     /// Radionuclide Half Life (0018,1075)
-    public static let radionuclideHalfLife = Tag(group: 0x0018, element: 0x1075)
+    /// Already defined in Tag+ModalitySpecific
+    // public static let radionuclideHalfLife = Tag(group: 0x0018, element: 0x1075)
     
     /// Radiopharmaceutical Start Time (0018,1072)
-    public static let radiopharmaceuticalStartTime = Tag(group: 0x0018, element: 0x1072)
+    /// Already defined in Tag+ModalitySpecific
+    // public static let radiopharmaceuticalStartTime = Tag(group: 0x0018, element: 0x1072)
     
     /// Series Date (0008,0021)
     /// Already defined elsewhere
@@ -165,7 +170,8 @@ extension Tag {
     // public static let seriesTime = Tag(group: 0x0008, element: 0x0031)
     
     /// Decay Correction (0054,1102)
-    public static let decayCorrection = Tag(group: 0x0054, element: 0x1102)
+    /// Already defined in Tag+ModalitySpecific
+    // public static let decayCorrection = Tag(group: 0x0054, element: 0x1102)
     
     /// Patient's Weight (0010,1030)
     /// Already defined in Tag+PatientInformation

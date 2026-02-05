@@ -132,9 +132,10 @@ public struct ParametricMapParser {
     /// Parse Real World Value Mapping Sequence
     private static func parseRealWorldValueMappings(from dataSet: DataSet) -> [RealWorldValueMapping] {
         // Check for mappings in shared functional groups
-        if let sharedGroups = dataSet.sequence(for: .sharedFunctionalGroupsSequence)?.first,
-           let mappingSequence = sharedGroups.sequence(for: .realWorldValueMappingSequence) {
-            return mappingSequence.compactMap { parseRealWorldValueMapping(from: $0) }
+        if let sharedGroups = dataSet.sequence(for: .sharedFunctionalGroupsSequence)?.first {
+            if let mappingSequence = sharedGroups[.realWorldValueMappingSequence]?.sequenceItems {
+                return mappingSequence.compactMap { parseRealWorldValueMapping(from: $0) }
+            }
         }
         
         // Check for mappings at the dataset level
@@ -146,7 +147,7 @@ public struct ParametricMapParser {
     }
     
     /// Parse a single Real World Value Mapping item
-    private static func parseRealWorldValueMapping(from item: DataSet) -> RealWorldValueMapping? {
+    private static func parseRealWorldValueMapping(from item: SequenceItem) -> RealWorldValueMapping? {
         // Parse label and explanation
         let label = item.string(for: .lutLabel)
         let explanation = item.string(for: .lutExplanation)
@@ -162,16 +163,36 @@ public struct ParametricMapParser {
         // Determine mapping method (linear or LUT)
         let mapping: MappingMethod
         
-        // Check for linear transformation (slope/intercept)
-        if let slope = item[.realWorldValueSlope]?.doubleFloatValue,
-           let intercept = item[.realWorldValueIntercept]?.doubleFloatValue {
-            mapping = .linear(slope: slope, intercept: intercept)
+        // Check for linear transformation (slope/intercept) - typically DS VR
+        if let slopeDS = item[.realWorldValueSlope]?.decimalStringValue?.value,
+           let interceptDS = item[.realWorldValueIntercept]?.decimalStringValue?.value {
+            mapping = .linear(slope: slopeDS, intercept: interceptDS)
         }
-        // Check for explicit LUT data
-        else if let lutData = item[.realWorldValueLUTData]?.doubleFloatArray,
+        // Check for explicit LUT data - would be FD VR
+        else if let lutDataElement = item[.realWorldValueLUTData],
+                let lutData = extractDoubleArray(from: lutDataElement),
                 !lutData.isEmpty {
-            let firstValue = item[.doubleFloatRealWorldValueFirstValueMapped]?.doubleFloatValue ?? 0.0
-            let lastValue = item[.doubleFloatRealWorldValueLastValueMapped]?.doubleFloatValue ?? Double(lutData.count - 1)
+            // Get first and last values mapped - might be DS or FD
+            let firstValue: Double
+            if let fdFirst = item[.doubleFloatRealWorldValueFirstValueMapped],
+               let value = extractDouble(from: fdFirst) {
+                firstValue = value
+            } else if let dsFirst = item[.realWorldValueFirstValueMapped]?.decimalStringValue?.value {
+                firstValue = dsFirst
+            } else {
+                firstValue = 0.0
+            }
+            
+            let lastValue: Double
+            if let fdLast = item[.doubleFloatRealWorldValueLastValueMapped],
+               let value = extractDouble(from: fdLast) {
+                lastValue = value
+            } else if let dsLast = item[.realWorldValueLastValueMapped]?.decimalStringValue?.value {
+                lastValue = dsLast
+            } else {
+                lastValue = Double(lutData.count - 1)
+            }
+            
             mapping = .lut(firstValueMapped: firstValue, lastValueMapped: lastValue, lutData: lutData)
         }
         else {
@@ -188,18 +209,40 @@ public struct ParametricMapParser {
         )
     }
     
+    /// Extract a double value from a DataElement (handles FD VR)
+    private static func extractDouble(from element: DataElement) -> Double? {
+        guard element.valueData.count >= 8 else {
+            return nil
+        }
+        return element.valueData.withUnsafeBytes { $0.loadUnaligned(fromByteOffset: 0, as: Double.self) }
+    }
+    
+    /// Extract double array from a DataElement (handles FD VR)
+    private static func extractDoubleArray(from element: DataElement) -> [Double]? {
+        let count = element.valueData.count / 8
+        guard count > 0 else {
+            return nil
+        }
+        
+        return element.valueData.withUnsafeBytes { buffer in
+            let pointer = buffer.bindMemory(to: Double.self)
+            return Array(pointer.prefix(count))
+        }
+    }
+    
     /// Parse Measurement Units Code Sequence
-    private static func parseMeasurementUnits(from dataSet: DataSet) -> MeasurementUnits? {
-        guard let sequence = dataSet.sequence(for: .measurementUnitsCodeSequence)?.first else {
+    private static func parseMeasurementUnits(from dataSet: SequenceItem) -> MeasurementUnits? {
+        guard let sequence = dataSet[Tag(group: 0x0040, element: 0x08EA)]?.sequenceItems,  // measurementUnitsCodeSequence
+              let firstItem = sequence.first else {
             return nil
         }
         
-        guard let codeValue = sequence.string(for: .codeValue),
-              let codeMeaning = sequence.string(for: .codeMeaning) else {
+        guard let codeValue = firstItem.string(for: Tag(group: 0x0008, element: 0x0100)),  // codeValue
+              let codeMeaning = firstItem.string(for: Tag(group: 0x0008, element: 0x0104)) else {  // codeMeaning
             return nil
         }
         
-        let codingSchemeDesignator = sequence.string(for: .codingSchemeDesignator) ?? "UCUM"
+        let codingSchemeDesignator = firstItem.string(for: Tag(group: 0x0008, element: 0x0102)) ?? "UCUM"  // codingSchemeDesignator
         
         return MeasurementUnits(
             codeValue: codeValue,
@@ -209,14 +252,15 @@ public struct ParametricMapParser {
     }
     
     /// Parse Quantity Definition Sequence
-    private static func parseQuantityDefinition(from dataSet: DataSet) -> QuantityDefinition? {
-        guard let sequence = dataSet.sequence(for: .quantityDefinitionSequence)?.first else {
+    private static func parseQuantityDefinition(from dataSet: SequenceItem) -> QuantityDefinition? {
+        guard let sequence = dataSet[.quantityDefinitionSequence]?.sequenceItems,
+              let firstItem = sequence.first else {
             return nil
         }
         
-        guard let codeValue = sequence.string(for: .codeValue),
-              let codingSchemeDesignator = sequence.string(for: .codingSchemeDesignator),
-              let codeMeaning = sequence.string(for: .codeMeaning) else {
+        guard let codeValue = firstItem.string(for: Tag(group: 0x0008, element: 0x0100)),  // codeValue
+              let codingSchemeDesignator = firstItem.string(for: Tag(group: 0x0008, element: 0x0102)),  // codingSchemeDesignator
+              let codeMeaning = firstItem.string(for: Tag(group: 0x0008, element: 0x0104)) else {  // codeMeaning
             return nil
         }
         
@@ -254,7 +298,7 @@ public struct ParametricMapParser {
             return []
         }
         
-        return sequence.compactMap { seriesItem in
+        return sequence.compactMap { seriesItem -> ParametricMapReferencedSeries? in
             guard let seriesInstanceUID = seriesItem.string(for: .seriesInstanceUID) else {
                 return nil
             }
@@ -269,18 +313,18 @@ public struct ParametricMapParser {
     }
     
     /// Parse Referenced Instance Sequence
-    private static func parseReferencedInstances(from dataSet: DataSet) -> [ReferencedInstance] {
-        guard let sequence = dataSet.sequence(for: .referencedInstanceSequence) else {
+    private static func parseReferencedInstances(from dataSet: SequenceItem) -> [ReferencedInstance] {
+        guard let sequence = dataSet[Tag(group: 0x0008, element: 0x114A)]?.sequenceItems else {  // referencedInstanceSequence
             return []
         }
         
-        return sequence.compactMap { instanceItem in
-            guard let sopClassUID = instanceItem.string(for: .referencedSOPClassUID),
-                  let sopInstanceUID = instanceItem.string(for: .referencedSOPInstanceUID) else {
+        return sequence.compactMap { instanceItem -> ReferencedInstance? in
+            guard let sopClassUID = instanceItem.string(for: Tag(group: 0x0008, element: 0x1150)),  // referencedSOPClassUID
+                  let sopInstanceUID = instanceItem.string(for: Tag(group: 0x0008, element: 0x1155)) else {  // referencedSOPInstanceUID
                 return nil
             }
             
-            let frameNumbers = instanceItem[.referencedFrameNumber]?.integerStringArray?.map(\.value) ?? []
+            let frameNumbers = instanceItem[Tag(group: 0x0008, element: 0x1160)]?.integerStringValues?.map { $0.value } ?? []  // referencedFrameNumber
             
             return ReferencedInstance(
                 referencedSOPClassUID: sopClassUID,
@@ -297,7 +341,7 @@ public struct ParametricMapParser {
             return nil
         }
         
-        return FunctionalGroup(dataSet: firstItem)
+        return parseFunctionalGroup(from: firstItem)
     }
     
     /// Parse Per-Frame Functional Groups Sequence
@@ -306,43 +350,15 @@ public struct ParametricMapParser {
             return []
         }
         
-        return sequence.map { FunctionalGroup(dataSet: $0) }
+        return sequence.compactMap { parseFunctionalGroup(from: $0) }
+    }
+    
+    /// Parse a single Functional Group (simplified for parametric maps)
+    private static func parseFunctionalGroup(from item: SequenceItem) -> FunctionalGroup? {
+        // For parametric maps, we don't need segment identification
+        // Just create an empty functional group as a placeholder
+        // In the future, we can parse frame content, plane position, etc. if needed
+        return FunctionalGroup()
     }
 }
 
-// MARK: - DataSet Extensions
-
-extension DataSet {
-    
-    /// Get double-precision floating point value
-    fileprivate var doubleFloatValue: Double? {
-        // Try FD (Floating Point Double) first
-        if let fd = self[.realWorldValueIntercept]?.value as? Data,
-           fd.count >= 8 {
-            return fd.withUnsafeBytes { $0.loadUnaligned(as: Double.self) }
-        }
-        
-        // Try DS (Decimal String) as fallback
-        if let ds = self[.realWorldValueIntercept]?.decimalStringValue?.value {
-            return ds
-        }
-        
-        return nil
-    }
-    
-    /// Get double-precision floating point array
-    fileprivate var doubleFloatArray: [Double]? {
-        // Try FD (Floating Point Double) VR
-        if let fd = self[.realWorldValueLUTData]?.value as? Data {
-            let count = fd.count / 8
-            guard count > 0 else { return nil }
-            
-            return fd.withUnsafeBytes { buffer in
-                let pointer = buffer.bindMemory(to: Double.self)
-                return Array(pointer.prefix(count))
-            }
-        }
-        
-        return nil
-    }
-}

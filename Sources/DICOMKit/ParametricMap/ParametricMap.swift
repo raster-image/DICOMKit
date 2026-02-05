@@ -469,19 +469,4 @@ public struct ReferencedInstance: Sendable {
     }
 }
 
-// MARK: - FunctionalGroup
-
-/// Functional Group (shared or per-frame)
-///
-/// Reused from Segmentation - contains frame-specific metadata
-/// Reference: PS3.3 C.7.6.16 - Multi-frame Functional Groups Module
-public struct FunctionalGroup: Sendable {
-    
-    /// Raw data set containing the functional group items
-    public let dataSet: DataSet
-    
-    /// Initialize a Functional Group
-    public init(dataSet: DataSet) {
-        self.dataSet = dataSet
-    }
-}
+// Note: FunctionalGroup is already defined in Segmentation.swift and is reused here
