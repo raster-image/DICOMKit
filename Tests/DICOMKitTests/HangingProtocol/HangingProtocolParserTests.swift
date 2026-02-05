@@ -29,11 +29,11 @@ final class HangingProtocolParserTests: XCTestCase {
             value: "Minimal Protocol"
         )
         
-        let `protocol` = try parser.parse(from: dataSet)
+        let hangingProtocol = try parser.parse(from: dataSet)
         
-        XCTAssertEqual(`protocol`.name, "Minimal Protocol")
-        XCTAssertEqual(`protocol`.level, .user, "Should default to user level")
-        XCTAssertEqual(`protocol`.numberOfScreens, 1, "Should default to 1 screen")
+        XCTAssertEqual(hangingProtocol.name, "Minimal Protocol")
+        XCTAssertEqual(hangingProtocol.level, .user, "Should default to user level")
+        XCTAssertEqual(hangingProtocol.numberOfScreens, 1, "Should default to 1 screen")
     }
     
     func test_parse_missingName_throwsError() {
@@ -66,41 +66,41 @@ final class HangingProtocolParserTests: XCTestCase {
         dataSet[.numberOfPriorsReferenced] = DataElement.uint16(tag: .numberOfPriorsReferenced, value: 2)
         dataSet[.numberOfScreens] = DataElement.uint16(tag: .numberOfScreens, value: 2)
         
-        let `protocol` = try parser.parse(from: dataSet)
+        let hangingProtocol = try parser.parse(from: dataSet)
         
-        XCTAssertEqual(`protocol`.name, "Complete Protocol")
-        XCTAssertEqual(`protocol`.description, "Test description")
-        XCTAssertEqual(`protocol`.level, .site)
-        XCTAssertEqual(`protocol`.creator, "Dr. Smith")
-        XCTAssertEqual(`protocol`.numberOfPriorsReferenced, 2)
-        XCTAssertEqual(`protocol`.numberOfScreens, 2)
+        XCTAssertEqual(hangingProtocol.name, "Complete Protocol")
+        XCTAssertEqual(hangingProtocol.description, "Test description")
+        XCTAssertEqual(hangingProtocol.level, .site)
+        XCTAssertEqual(hangingProtocol.creator, "Dr. Smith")
+        XCTAssertEqual(hangingProtocol.numberOfPriorsReferenced, 2)
+        XCTAssertEqual(hangingProtocol.numberOfScreens, 2)
     }
     
     func test_parse_protocolLevel_site() throws {
         var dataSet = createMinimalDataSet()
         dataSet[.hangingProtocolLevel] = DataElement.string(tag: .hangingProtocolLevel, vr: .CS, value: "SITE")
         
-        let `protocol` = try parser.parse(from: dataSet)
+        let hangingProtocol = try parser.parse(from: dataSet)
         
-        XCTAssertEqual(`protocol`.level, .site)
+        XCTAssertEqual(hangingProtocol.level, .site)
     }
     
     func test_parse_protocolLevel_group() throws {
         var dataSet = createMinimalDataSet()
         dataSet[.hangingProtocolLevel] = DataElement.string(tag: .hangingProtocolLevel, vr: .CS, value: "GROUP")
         
-        let `protocol` = try parser.parse(from: dataSet)
+        let hangingProtocol = try parser.parse(from: dataSet)
         
-        XCTAssertEqual(`protocol`.level, .group)
+        XCTAssertEqual(hangingProtocol.level, .group)
     }
     
     func test_parse_protocolLevel_user() throws {
         var dataSet = createMinimalDataSet()
         dataSet[.hangingProtocolLevel] = DataElement.string(tag: .hangingProtocolLevel, vr: .CS, value: "USER")
         
-        let `protocol` = try parser.parse(from: dataSet)
+        let hangingProtocol = try parser.parse(from: dataSet)
         
-        XCTAssertEqual(`protocol`.level, .user)
+        XCTAssertEqual(hangingProtocol.level, .user)
     }
     
     // MARK: - Environment Parsing Tests
@@ -108,9 +108,9 @@ final class HangingProtocolParserTests: XCTestCase {
     func test_parse_environments_empty() throws {
         let dataSet = createMinimalDataSet()
         
-        let `protocol` = try parser.parse(from: dataSet)
+        let hangingProtocol = try parser.parse(from: dataSet)
         
-        XCTAssertEqual(`protocol`.environments.count, 0, "Should have no environments")
+        XCTAssertEqual(hangingProtocol.environments.count, 0, "Should have no environments")
     }
     
     func test_parse_environments_single() throws {
@@ -119,12 +119,12 @@ final class HangingProtocolParserTests: XCTestCase {
         var envItem = DataSet()
         envItem[.modality] = DataElement.string(tag: .modality, vr: .CS, value: "CT")
         
-        dataSet.setSequence([SequenceItem(elements: envItem.elements.map { $0.value })], for: .hangingProtocolEnvironmentSequence)
+        dataSet.setSequence([SequenceItem(elements: envItem.allElements)], for: .hangingProtocolEnvironmentSequence)
         
-        let `protocol` = try parser.parse(from: dataSet)
+        let hangingProtocol = try parser.parse(from: dataSet)
         
-        XCTAssertEqual(`protocol`.environments.count, 1)
-        XCTAssertEqual(`protocol`.environments[0].modality, "CT")
+        XCTAssertEqual(hangingProtocol.environments.count, 1)
+        XCTAssertEqual(hangingProtocol.environments[0].modality, "CT")
     }
     
     func test_parse_environments_multiple() throws {
@@ -138,16 +138,16 @@ final class HangingProtocolParserTests: XCTestCase {
         env2[.laterality] = DataElement.string(tag: .laterality, vr: .CS, value: "L")
         
         dataSet.setSequence([
-            SequenceItem(elements: env1.elements.map { $0.value }),
-            SequenceItem(elements: env2.elements.map { $0.value })
+            SequenceItem(elements: env1.allElements),
+            SequenceItem(elements: env2.allElements)
         ], for: .hangingProtocolEnvironmentSequence)
         
-        let `protocol` = try parser.parse(from: dataSet)
+        let hangingProtocol = try parser.parse(from: dataSet)
         
-        XCTAssertEqual(`protocol`.environments.count, 2)
-        XCTAssertEqual(`protocol`.environments[0].modality, "CT")
-        XCTAssertEqual(`protocol`.environments[1].modality, "MR")
-        XCTAssertEqual(`protocol`.environments[1].laterality, "L")
+        XCTAssertEqual(hangingProtocol.environments.count, 2)
+        XCTAssertEqual(hangingProtocol.environments[0].modality, "CT")
+        XCTAssertEqual(hangingProtocol.environments[1].modality, "MR")
+        XCTAssertEqual(hangingProtocol.environments[1].laterality, "L")
     }
     
     // MARK: - User Group Parsing Tests
@@ -155,9 +155,9 @@ final class HangingProtocolParserTests: XCTestCase {
     func test_parse_userGroups_empty() throws {
         let dataSet = createMinimalDataSet()
         
-        let `protocol` = try parser.parse(from: dataSet)
+        let hangingProtocol = try parser.parse(from: dataSet)
         
-        XCTAssertEqual(`protocol`.userGroups.count, 0)
+        XCTAssertEqual(hangingProtocol.userGroups.count, 0)
     }
     
     func test_parse_userGroups_single() throws {
@@ -168,10 +168,10 @@ final class HangingProtocolParserTests: XCTestCase {
             value: "Radiology"
         )
         
-        let `protocol` = try parser.parse(from: dataSet)
+        let hangingProtocol = try parser.parse(from: dataSet)
         
-        XCTAssertEqual(`protocol`.userGroups.count, 1)
-        XCTAssertEqual(`protocol`.userGroups[0], "Radiology")
+        XCTAssertEqual(hangingProtocol.userGroups.count, 1)
+        XCTAssertEqual(hangingProtocol.userGroups[0], "Radiology")
     }
     
     // MARK: - Screen Definition Parsing Tests
@@ -179,31 +179,33 @@ final class HangingProtocolParserTests: XCTestCase {
     func test_parse_screenDefinitions_empty() throws {
         let dataSet = createMinimalDataSet()
         
-        let `protocol` = try parser.parse(from: dataSet)
+        let hangingProtocol = try parser.parse(from: dataSet)
         
-        XCTAssertEqual(`protocol`.screenDefinitions.count, 0)
+        XCTAssertEqual(hangingProtocol.screenDefinitions.count, 0)
     }
     
     func test_parse_screenDefinitions_single() throws {
         var dataSet = createMinimalDataSet()
         
         var screenItem = DataSet()
-        screenItem[.nominalScreenDefinitionVerticalPixels] = DataElement.uint16(
-            tag: .nominalScreenDefinitionVerticalPixels,
-            value: 1080
+        screenItem[.numberOfVerticalPixels] = DataElement.string(
+            tag: .numberOfVerticalPixels,
+            vr: .IS,
+            value: "1080"
         )
-        screenItem[.nominalScreenDefinitionHorizontalPixels] = DataElement.uint16(
-            tag: .nominalScreenDefinitionHorizontalPixels,
-            value: 1920
+        screenItem[.numberOfHorizontalPixels] = DataElement.string(
+            tag: .numberOfHorizontalPixels,
+            vr: .IS,
+            value: "1920"
         )
         
-        dataSet.setSequence([SequenceItem(elements: screenItem.elements.map { $0.value })], for: .nominalScreenDefinitionSequence)
+        dataSet.setSequence([SequenceItem(elements: screenItem.allElements)], for: .nominalScreenDefinitionSequence)
         
-        let `protocol` = try parser.parse(from: dataSet)
+        let hangingProtocol = try parser.parse(from: dataSet)
         
-        XCTAssertEqual(`protocol`.screenDefinitions.count, 1)
-        XCTAssertEqual(`protocol`.screenDefinitions[0].verticalPixels, 1080)
-        XCTAssertEqual(`protocol`.screenDefinitions[0].horizontalPixels, 1920)
+        XCTAssertEqual(hangingProtocol.screenDefinitions.count, 1)
+        XCTAssertEqual(hangingProtocol.screenDefinitions[0].verticalPixels, 1080)
+        XCTAssertEqual(hangingProtocol.screenDefinitions[0].horizontalPixels, 1920)
     }
     
     // MARK: - Image Set Parsing Tests
@@ -211,9 +213,9 @@ final class HangingProtocolParserTests: XCTestCase {
     func test_parse_imageSets_empty() throws {
         let dataSet = createMinimalDataSet()
         
-        let `protocol` = try parser.parse(from: dataSet)
+        let hangingProtocol = try parser.parse(from: dataSet)
         
-        XCTAssertEqual(`protocol`.imageSets.count, 0)
+        XCTAssertEqual(hangingProtocol.imageSets.count, 0)
     }
     
     func test_parse_imageSets_single() throws {
@@ -223,33 +225,36 @@ final class HangingProtocolParserTests: XCTestCase {
         imageSetItem[.imageSetNumber] = DataElement.uint16(tag: .imageSetNumber, value: 1)
         imageSetItem[.imageSetLabel] = DataElement.string(tag: .imageSetLabel, vr: .LO, value: "Primary")
         
-        dataSet.setSequence([SequenceItem(elements: imageSetItem.elements.map { $0.value })], for: .imageSetsSequence)
+        dataSet.setSequence([SequenceItem(elements: imageSetItem.allElements)], for: .imageSetsSequence)
         
-        let `protocol` = try parser.parse(from: dataSet)
+        let hangingProtocol = try parser.parse(from: dataSet)
         
-        XCTAssertEqual(`protocol`.imageSets.count, 1)
-        XCTAssertEqual(`protocol`.imageSets[0].number, 1)
-        XCTAssertEqual(`protocol`.imageSets[0].label, "Primary")
+        XCTAssertEqual(hangingProtocol.imageSets.count, 1)
+        XCTAssertEqual(hangingProtocol.imageSets[0].number, 1)
+        XCTAssertEqual(hangingProtocol.imageSets[0].label, "Primary")
     }
     
     func test_parse_imageSetSelector_basic() throws {
         var dataSet = createMinimalDataSet()
         
         var selectorItem = DataSet()
-        selectorItem[.selectorAttribute] = DataElement.attributeTag(tag: .selectorAttribute, value: .modality)
+        // Create attribute tag data element manually (AT VR)
+        let writer = DICOMWriter()
+        let attrTagData = writer.serializeTag(.modality)
+        selectorItem[.selectorAttribute] = DataElement(tag: .selectorAttribute, vr: .AT, length: 4, valueData: attrTagData)
         selectorItem[.selectorValueNumber] = DataElement.uint16(tag: .selectorValueNumber, value: 1)
         
         var imageSetItem = DataSet()
         imageSetItem[.imageSetNumber] = DataElement.uint16(tag: .imageSetNumber, value: 1)
-        imageSetItem.setSequence([SequenceItem(elements: selectorItem.elements.map { $0.value })], for: .selectorSequence)
+        imageSetItem.setSequence([SequenceItem(elements: selectorItem.allElements)], for: .selectorSequence)
         
-        dataSet.setSequence([SequenceItem(elements: imageSetItem.elements.map { $0.value })], for: .imageSetsSequence)
+        dataSet.setSequence([SequenceItem(elements: imageSetItem.allElements)], for: .imageSetsSequence)
         
-        let `protocol` = try parser.parse(from: dataSet)
+        let hangingProtocol = try parser.parse(from: dataSet)
         
-        XCTAssertEqual(`protocol`.imageSets.count, 1)
-        XCTAssertEqual(`protocol`.imageSets[0].selectors.count, 1)
-        XCTAssertEqual(`protocol`.imageSets[0].selectors[0].attribute, .modality)
+        XCTAssertEqual(hangingProtocol.imageSets.count, 1)
+        XCTAssertEqual(hangingProtocol.imageSets[0].selectors.count, 1)
+        XCTAssertEqual(hangingProtocol.imageSets[0].selectors[0].attribute, .modality)
     }
     
     // MARK: - Display Set Parsing Tests
@@ -257,9 +262,9 @@ final class HangingProtocolParserTests: XCTestCase {
     func test_parse_displaySets_empty() throws {
         let dataSet = createMinimalDataSet()
         
-        let `protocol` = try parser.parse(from: dataSet)
+        let hangingProtocol = try parser.parse(from: dataSet)
         
-        XCTAssertEqual(`protocol`.displaySets.count, 0)
+        XCTAssertEqual(hangingProtocol.displaySets.count, 0)
     }
     
     func test_parse_displaySets_single() throws {
@@ -269,13 +274,13 @@ final class HangingProtocolParserTests: XCTestCase {
         displaySetItem[.displaySetNumber] = DataElement.uint16(tag: .displaySetNumber, value: 1)
         displaySetItem[.displaySetLabel] = DataElement.string(tag: .displaySetLabel, vr: .LO, value: "Main View")
         
-        dataSet.setSequence([SequenceItem(elements: displaySetItem.elements.map { $0.value })], for: .displaySetsSequence)
+        dataSet.setSequence([SequenceItem(elements: displaySetItem.allElements)], for: .displaySetsSequence)
         
-        let `protocol` = try parser.parse(from: dataSet)
+        let hangingProtocol = try parser.parse(from: dataSet)
         
-        XCTAssertEqual(`protocol`.displaySets.count, 1)
-        XCTAssertEqual(`protocol`.displaySets[0].number, 1)
-        XCTAssertEqual(`protocol`.displaySets[0].label, "Main View")
+        XCTAssertEqual(hangingProtocol.displaySets.count, 1)
+        XCTAssertEqual(hangingProtocol.displaySets[0].number, 1)
+        XCTAssertEqual(hangingProtocol.displaySets[0].label, "Main View")
     }
     
     func test_parse_imageBox_stack() throws {
@@ -287,35 +292,35 @@ final class HangingProtocolParserTests: XCTestCase {
         
         var displaySetItem = DataSet()
         displaySetItem[.displaySetNumber] = DataElement.uint16(tag: .displaySetNumber, value: 1)
-        displaySetItem.setSequence([SequenceItem(elements: imageBoxItem.elements.map { $0.value })], for: .imageBoxesSequence)
+        displaySetItem.setSequence([SequenceItem(elements: imageBoxItem.allElements)], for: .imageBoxesSequence)
         
-        dataSet.setSequence([SequenceItem(elements: displaySetItem.elements.map { $0.value })], for: .displaySetsSequence)
+        dataSet.setSequence([SequenceItem(elements: displaySetItem.allElements)], for: .displaySetsSequence)
         
-        let `protocol` = try parser.parse(from: dataSet)
+        let hangingProtocol = try parser.parse(from: dataSet)
         
-        XCTAssertEqual(`protocol`.displaySets.count, 1)
-        XCTAssertEqual(`protocol`.displaySets[0].imageBoxes.count, 1)
-        XCTAssertEqual(`protocol`.displaySets[0].imageBoxes[0].layoutType, .stack)
+        XCTAssertEqual(hangingProtocol.displaySets.count, 1)
+        XCTAssertEqual(hangingProtocol.displaySets[0].imageBoxes.count, 1)
+        XCTAssertEqual(hangingProtocol.displaySets[0].imageBoxes[0].layoutType, .stack)
     }
     
     func test_parse_imageBox_tiled() throws {
         var dataSet = createMinimalDataSet()
         
         var imageBoxItem = DataSet()
-        imageBoxItem[.imageBoxNumber] = DataElement.uint16(tag: .imageBoxNumber, value: 1)
+        imageBoxItem[.imageBoxNumber] = DataElement.string(tag: .imageBoxNumber, vr: .IS, value: "1")
         imageBoxItem[.imageBoxLayoutType] = DataElement.string(tag: .imageBoxLayoutType, vr: .CS, value: "TILED")
-        imageBoxItem[.imageBoxTileHorizontalDimension] = DataElement.uint16(tag: .imageBoxTileHorizontalDimension, value: 2)
-        imageBoxItem[.imageBoxTileVerticalDimension] = DataElement.uint16(tag: .imageBoxTileVerticalDimension, value: 2)
+        imageBoxItem[.imageBoxTileHorizontalDimension] = DataElement.string(tag: .imageBoxTileHorizontalDimension, vr: .IS, value: "2")
+        imageBoxItem[.imageBoxTileVerticalDimension] = DataElement.string(tag: .imageBoxTileVerticalDimension, vr: .IS, value: "2")
         
         var displaySetItem = DataSet()
-        displaySetItem[.displaySetNumber] = DataElement.uint16(tag: .displaySetNumber, value: 1)
-        displaySetItem.setSequence([SequenceItem(elements: imageBoxItem.elements.map { $0.value })], for: .imageBoxesSequence)
+        displaySetItem[.displaySetNumber] = DataElement.string(tag: .displaySetNumber, vr: .IS, value: "1")
+        displaySetItem.setSequence([SequenceItem(elements: imageBoxItem.allElements)], for: .imageBoxesSequence)
         
-        dataSet.setSequence([SequenceItem(elements: displaySetItem.elements.map { $0.value })], for: .displaySetsSequence)
+        dataSet.setSequence([SequenceItem(elements: displaySetItem.allElements)], for: .displaySetsSequence)
         
-        let `protocol` = try parser.parse(from: dataSet)
+        let hangingProtocol = try parser.parse(from: dataSet)
         
-        let imageBox = `protocol`.displaySets[0].imageBoxes[0]
+        let imageBox = hangingProtocol.displaySets[0].imageBoxes[0]
         XCTAssertEqual(imageBox.layoutType, .tiled)
         XCTAssertEqual(imageBox.tileHorizontalDimension, 2)
         XCTAssertEqual(imageBox.tileVerticalDimension, 2)
@@ -330,11 +335,11 @@ final class HangingProtocolParserTests: XCTestCase {
         displaySetItem[.showGrayscaleInverted] = DataElement.string(tag: .showGrayscaleInverted, vr: .CS, value: "Y")
         displaySetItem[.showImageTrueSizeFlag] = DataElement.string(tag: .showImageTrueSizeFlag, vr: .CS, value: "Y")
         
-        dataSet.setSequence([SequenceItem(elements: displaySetItem.elements.map { $0.value })], for: .displaySetsSequence)
+        dataSet.setSequence([SequenceItem(elements: displaySetItem.allElements)], for: .displaySetsSequence)
         
-        let `protocol` = try parser.parse(from: dataSet)
+        let hangingProtocol = try parser.parse(from: dataSet)
         
-        let options = `protocol`.displaySets[0].displayOptions
+        let options = hangingProtocol.displaySets[0].displayOptions
         XCTAssertEqual(options.patientOrientation, "L\\P")
         XCTAssertTrue(options.showGrayscaleInverted)
         XCTAssertTrue(options.showImageTrueSize)

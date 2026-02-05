@@ -22,9 +22,9 @@ final class HangingProtocolSerializerTests: XCTestCase {
     // MARK: - Basic Serialization Tests
     
     func test_serialize_minimalProtocol() throws {
-        let `protocol` = HangingProtocol(name: "Test Protocol")
+        let hangingProtocol = HangingProtocol(name: "Test Protocol")
         
-        let dataSet = try serializer.serialize(protocol: `protocol`)
+        let dataSet = try serializer.serialize(protocol: hangingProtocol)
         
         XCTAssertEqual(dataSet.string(for: .hangingProtocolName), "Test Protocol")
         XCTAssertEqual(dataSet.string(for: .hangingProtocolLevel), "USER")
@@ -32,9 +32,9 @@ final class HangingProtocolSerializerTests: XCTestCase {
     }
     
     func test_serialize_completeProtocol() throws {
-        let dateTime = DICOMDateTime(date: DICOMDate(year: 2024, month: 1, day: 15), time: nil)
+        let dateTime = DICOMDateTime(year: 2024, month: 1, day: 15)
         
-        let `protocol` = HangingProtocol(
+        let hangingProtocol = HangingProtocol(
             name: "Complete Protocol",
             description: "Test description",
             level: .site,
@@ -44,7 +44,7 @@ final class HangingProtocolSerializerTests: XCTestCase {
             numberOfScreens: 2
         )
         
-        let dataSet = try serializer.serialize(protocol: `protocol`)
+        let dataSet = try serializer.serialize(protocol: hangingProtocol)
         
         XCTAssertEqual(dataSet.string(for: .hangingProtocolName), "Complete Protocol")
         XCTAssertEqual(dataSet.string(for: .hangingProtocolDescription), "Test description")
@@ -56,25 +56,25 @@ final class HangingProtocolSerializerTests: XCTestCase {
     }
     
     func test_serialize_protocolLevel_site() throws {
-        let `protocol` = HangingProtocol(name: "Test", level: .site)
+        let hangingProtocol = HangingProtocol(name: "Test", level: .site)
         
-        let dataSet = try serializer.serialize(protocol: `protocol`)
+        let dataSet = try serializer.serialize(protocol: hangingProtocol)
         
         XCTAssertEqual(dataSet.string(for: .hangingProtocolLevel), "SITE")
     }
     
     func test_serialize_protocolLevel_group() throws {
-        let `protocol` = HangingProtocol(name: "Test", level: .group)
+        let hangingProtocol = HangingProtocol(name: "Test", level: .group)
         
-        let dataSet = try serializer.serialize(protocol: `protocol`)
+        let dataSet = try serializer.serialize(protocol: hangingProtocol)
         
         XCTAssertEqual(dataSet.string(for: .hangingProtocolLevel), "GROUP")
     }
     
     func test_serialize_protocolLevel_user() throws {
-        let `protocol` = HangingProtocol(name: "Test", level: .user)
+        let hangingProtocol = HangingProtocol(name: "Test", level: .user)
         
-        let dataSet = try serializer.serialize(protocol: `protocol`)
+        let dataSet = try serializer.serialize(protocol: hangingProtocol)
         
         XCTAssertEqual(dataSet.string(for: .hangingProtocolLevel), "USER")
     }
@@ -82,9 +82,9 @@ final class HangingProtocolSerializerTests: XCTestCase {
     // MARK: - Environment Serialization Tests
     
     func test_serialize_environments_empty() throws {
-        let `protocol` = HangingProtocol(name: "Test", environments: [])
+        let hangingProtocol = HangingProtocol(name: "Test", environments: [])
         
-        let dataSet = try serializer.serialize(protocol: `protocol`)
+        let dataSet = try serializer.serialize(protocol: hangingProtocol)
         
         XCTAssertNil(dataSet.sequence(for: .hangingProtocolEnvironmentSequence),
                      "Should not include empty environment sequence")
@@ -92,9 +92,9 @@ final class HangingProtocolSerializerTests: XCTestCase {
     
     func test_serialize_environments_single() throws {
         let environment = HangingProtocolEnvironment(modality: "CT")
-        let `protocol` = HangingProtocol(name: "Test", environments: [environment])
+        let hangingProtocol = HangingProtocol(name: "Test", environments: [environment])
         
-        let dataSet = try serializer.serialize(protocol: `protocol`)
+        let dataSet = try serializer.serialize(protocol: hangingProtocol)
         
         let envSequence = dataSet.sequence(for: .hangingProtocolEnvironmentSequence)
         XCTAssertNotNil(envSequence)
@@ -107,9 +107,9 @@ final class HangingProtocolSerializerTests: XCTestCase {
     func test_serialize_environments_multiple() throws {
         let env1 = HangingProtocolEnvironment(modality: "CT", laterality: nil)
         let env2 = HangingProtocolEnvironment(modality: "MR", laterality: "L")
-        let `protocol` = HangingProtocol(name: "Test", environments: [env1, env2])
+        let hangingProtocol = HangingProtocol(name: "Test", environments: [env1, env2])
         
-        let dataSet = try serializer.serialize(protocol: `protocol`)
+        let dataSet = try serializer.serialize(protocol: hangingProtocol)
         
         let envSequence = dataSet.sequence(for: .hangingProtocolEnvironmentSequence)
         XCTAssertEqual(envSequence?.count, 2)
@@ -122,17 +122,17 @@ final class HangingProtocolSerializerTests: XCTestCase {
     // MARK: - User Group Serialization Tests
     
     func test_serialize_userGroups_empty() throws {
-        let `protocol` = HangingProtocol(name: "Test", userGroups: [])
+        let hangingProtocol = HangingProtocol(name: "Test", userGroups: [])
         
-        let dataSet = try serializer.serialize(protocol: `protocol`)
+        let dataSet = try serializer.serialize(protocol: hangingProtocol)
         
         XCTAssertNil(dataSet.string(for: .hangingProtocolUserGroupName))
     }
     
     func test_serialize_userGroups_single() throws {
-        let `protocol` = HangingProtocol(name: "Test", userGroups: ["Radiology"])
+        let hangingProtocol = HangingProtocol(name: "Test", userGroups: ["Radiology"])
         
-        let dataSet = try serializer.serialize(protocol: `protocol`)
+        let dataSet = try serializer.serialize(protocol: hangingProtocol)
         
         XCTAssertEqual(dataSet.string(for: .hangingProtocolUserGroupName), "Radiology")
     }
@@ -140,9 +140,9 @@ final class HangingProtocolSerializerTests: XCTestCase {
     // MARK: - Screen Definition Serialization Tests
     
     func test_serialize_screenDefinitions_empty() throws {
-        let `protocol` = HangingProtocol(name: "Test", screenDefinitions: [])
+        let hangingProtocol = HangingProtocol(name: "Test", screenDefinitions: [])
         
-        let dataSet = try serializer.serialize(protocol: `protocol`)
+        let dataSet = try serializer.serialize(protocol: hangingProtocol)
         
         XCTAssertNil(dataSet.sequence(for: .nominalScreenDefinitionSequence))
     }
@@ -153,41 +153,41 @@ final class HangingProtocolSerializerTests: XCTestCase {
             horizontalPixels: 1920,
             minimumGrayscaleBitDepth: 8
         )
-        let `protocol` = HangingProtocol(name: "Test", screenDefinitions: [screen])
+        let hangingProtocol = HangingProtocol(name: "Test", screenDefinitions: [screen])
         
-        let dataSet = try serializer.serialize(protocol: `protocol`)
+        let dataSet = try serializer.serialize(protocol: hangingProtocol)
         
         let screenSequence = dataSet.sequence(for: .nominalScreenDefinitionSequence)
         XCTAssertNotNil(screenSequence)
         XCTAssertEqual(screenSequence?.count, 1)
         
         let screenItem = screenSequence?[0]
-        XCTAssertEqual(screenItem?.uint16(for: .nominalScreenDefinitionVerticalPixels), 1080)
-        XCTAssertEqual(screenItem?.uint16(for: .nominalScreenDefinitionHorizontalPixels), 1920)
+        XCTAssertEqual(screenItem?[.numberOfVerticalPixels]?.uint16Value, 1080)
+        XCTAssertEqual(screenItem?[.numberOfHorizontalPixels]?.uint16Value, 1920)
     }
     
     // MARK: - Image Set Serialization Tests
     
     func test_serialize_imageSets_empty() throws {
-        let `protocol` = HangingProtocol(name: "Test", imageSets: [])
+        let hangingProtocol = HangingProtocol(name: "Test", imageSets: [])
         
-        let dataSet = try serializer.serialize(protocol: `protocol`)
+        let dataSet = try serializer.serialize(protocol: hangingProtocol)
         
         XCTAssertNil(dataSet.sequence(for: .imageSetsSequence))
     }
     
     func test_serialize_imageSets_single() throws {
         let imageSet = ImageSetDefinition(number: 1, label: "Primary")
-        let `protocol` = HangingProtocol(name: "Test", imageSets: [imageSet])
+        let hangingProtocol = HangingProtocol(name: "Test", imageSets: [imageSet])
         
-        let dataSet = try serializer.serialize(protocol: `protocol`)
+        let dataSet = try serializer.serialize(protocol: hangingProtocol)
         
         let imageSetSequence = dataSet.sequence(for: .imageSetsSequence)
         XCTAssertNotNil(imageSetSequence)
         XCTAssertEqual(imageSetSequence?.count, 1)
         
         let imageSetItem = imageSetSequence?[0]
-        XCTAssertEqual(imageSetItem?.uint16(for: .imageSetNumber), 1)
+        XCTAssertEqual(imageSetItem?[.imageSetNumber]?.uint16Value, 1)
         XCTAssertEqual(imageSetItem?.string(for: .imageSetLabel), "Primary")
     }
     
@@ -200,13 +200,13 @@ final class HangingProtocolSerializerTests: XCTestCase {
             usageFlag: .match
         )
         let imageSet = ImageSetDefinition(number: 1, selectors: [selector])
-        let `protocol` = HangingProtocol(name: "Test", imageSets: [imageSet])
+        let hangingProtocol = HangingProtocol(name: "Test", imageSets: [imageSet])
         
-        let dataSet = try serializer.serialize(protocol: `protocol`)
+        let dataSet = try serializer.serialize(protocol: hangingProtocol)
         
         let imageSetSequence = dataSet.sequence(for: .imageSetsSequence)
         let imageSetItem = imageSetSequence?[0]
-        let selectorSequence = imageSetItem?.sequence(for: .selectorSequence)
+        let selectorSequence = imageSetItem?[.selectorSequence]?.sequenceItems
         
         XCTAssertNotNil(selectorSequence)
         XCTAssertEqual(selectorSequence?.count, 1)
@@ -215,44 +215,44 @@ final class HangingProtocolSerializerTests: XCTestCase {
     // MARK: - Display Set Serialization Tests
     
     func test_serialize_displaySets_empty() throws {
-        let `protocol` = HangingProtocol(name: "Test", displaySets: [])
+        let hangingProtocol = HangingProtocol(name: "Test", displaySets: [])
         
-        let dataSet = try serializer.serialize(protocol: `protocol`)
+        let dataSet = try serializer.serialize(protocol: hangingProtocol)
         
         XCTAssertNil(dataSet.sequence(for: .displaySetsSequence))
     }
     
     func test_serialize_displaySets_single() throws {
         let displaySet = DisplaySet(number: 1, label: "Main View")
-        let `protocol` = HangingProtocol(name: "Test", displaySets: [displaySet])
+        let hangingProtocol = HangingProtocol(name: "Test", displaySets: [displaySet])
         
-        let dataSet = try serializer.serialize(protocol: `protocol`)
+        let dataSet = try serializer.serialize(protocol: hangingProtocol)
         
         let displaySetSequence = dataSet.sequence(for: .displaySetsSequence)
         XCTAssertNotNil(displaySetSequence)
         XCTAssertEqual(displaySetSequence?.count, 1)
         
         let displaySetItem = displaySetSequence?[0]
-        XCTAssertEqual(displaySetItem?.uint16(for: .displaySetNumber), 1)
+        XCTAssertEqual(displaySetItem?[.displaySetNumber]?.uint16Value, 1)
         XCTAssertEqual(displaySetItem?.string(for: .displaySetLabel), "Main View")
     }
     
     func test_serialize_imageBox_stack() throws {
         let imageBox = ImageBox(number: 1, layoutType: .stack, imageSetNumbers: [1])
         let displaySet = DisplaySet(number: 1, imageBoxes: [imageBox])
-        let `protocol` = HangingProtocol(name: "Test", displaySets: [displaySet])
+        let hangingProtocol = HangingProtocol(name: "Test", displaySets: [displaySet])
         
-        let dataSet = try serializer.serialize(protocol: `protocol`)
+        let dataSet = try serializer.serialize(protocol: hangingProtocol)
         
         let displaySetSequence = dataSet.sequence(for: .displaySetsSequence)
         let displaySetItem = displaySetSequence?[0]
-        let imageBoxSequence = displaySetItem?.sequence(for: .imageBoxesSequence)
+        let imageBoxSequence = displaySetItem?[.imageBoxesSequence]?.sequenceItems
         
         XCTAssertNotNil(imageBoxSequence)
         XCTAssertEqual(imageBoxSequence?.count, 1)
         
         let imageBoxItem = imageBoxSequence?[0]
-        XCTAssertEqual(imageBoxItem?.uint16(for: .imageBoxNumber), 1)
+        XCTAssertEqual(imageBoxItem?[.imageBoxNumber]?.uint16Value, 1)
         XCTAssertEqual(imageBoxItem?.string(for: .imageBoxLayoutType), "STACK")
     }
     
@@ -265,18 +265,18 @@ final class HangingProtocolSerializerTests: XCTestCase {
             tileVerticalDimension: 2
         )
         let displaySet = DisplaySet(number: 1, imageBoxes: [imageBox])
-        let `protocol` = HangingProtocol(name: "Test", displaySets: [displaySet])
+        let hangingProtocol = HangingProtocol(name: "Test", displaySets: [displaySet])
         
-        let dataSet = try serializer.serialize(protocol: `protocol`)
+        let dataSet = try serializer.serialize(protocol: hangingProtocol)
         
         let displaySetSequence = dataSet.sequence(for: .displaySetsSequence)
         let displaySetItem = displaySetSequence?[0]
-        let imageBoxSequence = displaySetItem?.sequence(for: .imageBoxesSequence)
+        let imageBoxSequence = displaySetItem?[.imageBoxesSequence]?.sequenceItems
         let imageBoxItem = imageBoxSequence?[0]
         
         XCTAssertEqual(imageBoxItem?.string(for: .imageBoxLayoutType), "TILED")
-        XCTAssertEqual(imageBoxItem?.uint16(for: .imageBoxTileHorizontalDimension), 2)
-        XCTAssertEqual(imageBoxItem?.uint16(for: .imageBoxTileVerticalDimension), 2)
+        XCTAssertEqual(imageBoxItem?[.imageBoxTileHorizontalDimension]?.uint16Value, 2)
+        XCTAssertEqual(imageBoxItem?[.imageBoxTileVerticalDimension]?.uint16Value, 2)
     }
     
     func test_serialize_displayOptions() throws {
@@ -287,9 +287,9 @@ final class HangingProtocolSerializerTests: XCTestCase {
             showGraphicAnnotations: false
         )
         let displaySet = DisplaySet(number: 1, displayOptions: options)
-        let `protocol` = HangingProtocol(name: "Test", displaySets: [displaySet])
+        let hangingProtocol = HangingProtocol(name: "Test", displaySets: [displaySet])
         
-        let dataSet = try serializer.serialize(protocol: `protocol`)
+        let dataSet = try serializer.serialize(protocol: hangingProtocol)
         
         let displaySetSequence = dataSet.sequence(for: .displaySetsSequence)
         let displaySetItem = displaySetSequence?[0]

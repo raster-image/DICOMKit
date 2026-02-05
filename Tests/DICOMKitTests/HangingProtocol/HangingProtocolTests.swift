@@ -15,20 +15,20 @@ final class HangingProtocolTests: XCTestCase {
     // MARK: - HangingProtocol Tests
     
     func test_hangingProtocol_initialization_withRequiredParameters() {
-        let protocol = HangingProtocol(name: "Test Protocol")
+        let hangingProtocol = HangingProtocol(name: "Test Protocol")
         
-        XCTAssertEqual(protocol.name, "Test Protocol", "Name should be set correctly")
-        XCTAssertNil(protocol.description, "Description should be nil by default")
-        XCTAssertEqual(protocol.level, .user, "Level should default to USER")
-        XCTAssertNil(protocol.creator, "Creator should be nil by default")
-        XCTAssertNil(protocol.creationDateTime, "Creation date time should be nil by default")
-        XCTAssertNil(protocol.numberOfPriorsReferenced, "Number of priors should be nil by default")
-        XCTAssertEqual(protocol.environments.count, 0, "Environments should be empty by default")
-        XCTAssertEqual(protocol.userGroups.count, 0, "User groups should be empty by default")
-        XCTAssertEqual(protocol.imageSets.count, 0, "Image sets should be empty by default")
-        XCTAssertEqual(protocol.numberOfScreens, 1, "Number of screens should default to 1")
-        XCTAssertEqual(protocol.screenDefinitions.count, 0, "Screen definitions should be empty by default")
-        XCTAssertEqual(protocol.displaySets.count, 0, "Display sets should be empty by default")
+        XCTAssertEqual(hangingProtocol.name, "Test Protocol", "Name should be set correctly")
+        XCTAssertNil(hangingProtocol.description, "Description should be nil by default")
+        XCTAssertEqual(hangingProtocol.level, .user, "Level should default to USER")
+        XCTAssertNil(hangingProtocol.creator, "Creator should be nil by default")
+        XCTAssertNil(hangingProtocol.creationDateTime, "Creation date time should be nil by default")
+        XCTAssertNil(hangingProtocol.numberOfPriorsReferenced, "Number of priors should be nil by default")
+        XCTAssertEqual(hangingProtocol.environments.count, 0, "Environments should be empty by default")
+        XCTAssertEqual(hangingProtocol.userGroups.count, 0, "User groups should be empty by default")
+        XCTAssertEqual(hangingProtocol.imageSets.count, 0, "Image sets should be empty by default")
+        XCTAssertEqual(hangingProtocol.numberOfScreens, 1, "Number of screens should default to 1")
+        XCTAssertEqual(hangingProtocol.screenDefinitions.count, 0, "Screen definitions should be empty by default")
+        XCTAssertEqual(hangingProtocol.displaySets.count, 0, "Display sets should be empty by default")
     }
     
     func test_hangingProtocol_initialization_withAllParameters() {
@@ -36,9 +36,9 @@ final class HangingProtocolTests: XCTestCase {
         let imageSet = ImageSetDefinition(number: 1, label: "Primary")
         let screen = ScreenDefinition(verticalPixels: 1080, horizontalPixels: 1920)
         let displaySet = DisplaySet(number: 1, label: "Main View")
-        let dateTime = DICOMDateTime(date: DICOMDate(year: 2024, month: 1, day: 15), time: nil)
+        let dateTime = DICOMDateTime(year: 2024, month: 1, day: 15)
         
-        let `protocol` = HangingProtocol(
+        let hangingProtocol = HangingProtocol(
             name: "Chest CT Protocol",
             description: "Standard chest CT viewing",
             level: .site,
@@ -53,32 +53,32 @@ final class HangingProtocolTests: XCTestCase {
             displaySets: [displaySet]
         )
         
-        XCTAssertEqual(`protocol`.name, "Chest CT Protocol")
-        XCTAssertEqual(`protocol`.description, "Standard chest CT viewing")
-        XCTAssertEqual(`protocol`.level, .site)
-        XCTAssertEqual(`protocol`.creator, "Dr. Smith")
-        XCTAssertNotNil(`protocol`.creationDateTime)
-        XCTAssertEqual(`protocol`.numberOfPriorsReferenced, 2)
-        XCTAssertEqual(`protocol`.environments.count, 1)
-        XCTAssertEqual(`protocol`.userGroups.count, 1)
-        XCTAssertEqual(`protocol`.imageSets.count, 1)
-        XCTAssertEqual(`protocol`.numberOfScreens, 2)
-        XCTAssertEqual(`protocol`.screenDefinitions.count, 1)
-        XCTAssertEqual(`protocol`.displaySets.count, 1)
+        XCTAssertEqual(hangingProtocol.name, "Chest CT Protocol")
+        XCTAssertEqual(hangingProtocol.description, "Standard chest CT viewing")
+        XCTAssertEqual(hangingProtocol.level, .site)
+        XCTAssertEqual(hangingProtocol.creator, "Dr. Smith")
+        XCTAssertNotNil(hangingProtocol.creationDateTime)
+        XCTAssertEqual(hangingProtocol.numberOfPriorsReferenced, 2)
+        XCTAssertEqual(hangingProtocol.environments.count, 1)
+        XCTAssertEqual(hangingProtocol.userGroups.count, 1)
+        XCTAssertEqual(hangingProtocol.imageSets.count, 1)
+        XCTAssertEqual(hangingProtocol.numberOfScreens, 2)
+        XCTAssertEqual(hangingProtocol.screenDefinitions.count, 1)
+        XCTAssertEqual(hangingProtocol.displaySets.count, 1)
     }
     
     func test_hangingProtocol_multipleEnvironments() {
         let env1 = HangingProtocolEnvironment(modality: "CT", laterality: nil)
         let env2 = HangingProtocolEnvironment(modality: "MR", laterality: "R")
         
-        let `protocol` = HangingProtocol(
+        let hangingProtocol = HangingProtocol(
             name: "Multi-Modal",
             environments: [env1, env2]
         )
         
-        XCTAssertEqual(`protocol`.environments.count, 2, "Should have 2 environments")
-        XCTAssertEqual(`protocol`.environments[0].modality, "CT")
-        XCTAssertEqual(`protocol`.environments[1].modality, "MR")
+        XCTAssertEqual(hangingProtocol.environments.count, 2, "Should have 2 environments")
+        XCTAssertEqual(hangingProtocol.environments[0].modality, "CT")
+        XCTAssertEqual(hangingProtocol.environments[1].modality, "MR")
     }
     
     // MARK: - HangingProtocolLevel Tests
@@ -195,14 +195,14 @@ final class HangingProtocolTests: XCTestCase {
     }
     
     func test_hangingProtocol_multipleUserGroups() {
-        let `protocol` = HangingProtocol(
+        let hangingProtocol = HangingProtocol(
             name: "Shared Protocol",
             userGroups: ["Radiology", "Cardiology", "Neurology"]
         )
         
-        XCTAssertEqual(`protocol`.userGroups.count, 3, "Should support multiple user groups")
-        XCTAssertTrue(`protocol`.userGroups.contains("Radiology"))
-        XCTAssertTrue(`protocol`.userGroups.contains("Cardiology"))
-        XCTAssertTrue(`protocol`.userGroups.contains("Neurology"))
+        XCTAssertEqual(hangingProtocol.userGroups.count, 3, "Should support multiple user groups")
+        XCTAssertTrue(hangingProtocol.userGroups.contains("Radiology"))
+        XCTAssertTrue(hangingProtocol.userGroups.contains("Cardiology"))
+        XCTAssertTrue(hangingProtocol.userGroups.contains("Neurology"))
     }
 }

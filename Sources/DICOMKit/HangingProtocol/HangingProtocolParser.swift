@@ -35,7 +35,7 @@ public struct HangingProtocolParser {
         let level = levelString.flatMap { HangingProtocolLevel(rawValue: $0) } ?? .user
         let creator = dataSet.string(for: .hangingProtocolCreator)
         let creationDateTime = dataSet.dateTime(for: .hangingProtocolCreationDateTime)
-        let numberOfPriors = dataSet.integer(for: .numberOfPriorsReferenced)
+        let numberOfPriors = dataSet.uint16(for: .numberOfPriorsReferenced).map { Int($0) }
         
         // Parse environments
         let environments = try parseEnvironments(from: dataSet)
@@ -47,7 +47,7 @@ public struct HangingProtocolParser {
         let imageSets = try parseImageSets(from: dataSet)
         
         // Parse display specification
-        let numberOfScreens = dataSet.integer(for: .numberOfScreens) ?? 1
+        let numberOfScreens = dataSet.uint16(for: .numberOfScreens).map { Int($0) } ?? 1
         let screenDefinitions = try parseScreenDefinitions(from: dataSet)
         let displaySets = try parseDisplaySets(from: dataSet)
         
@@ -111,7 +111,7 @@ public struct HangingProtocolParser {
         var imageSets: [ImageSetDefinition] = []
         
         for (index, imageSetItem) in imageSetsSequence.enumerated() {
-            let number = imageSetItem.integer(for: .imageSetNumber) ?? (index + 1)
+            let number = imageSetItem[.imageSetNumber]?.integerStringValue?.value ?? (index + 1)
             let label = imageSetItem.string(for: .imageSetLabel)
             let selectors = try parseSelectors(from: imageSetItem)
             let sortOperations = parseSortOperations(from: imageSetItem)
@@ -132,26 +132,28 @@ public struct HangingProtocolParser {
         return imageSets
     }
     
-    private func parseSelectors(from imageSetItem: DataSet) throws -> [ImageSetSelector] {
-        guard let selectorSequence = imageSetItem.sequence(for: .selectorSequence) else {
+    private func parseSelectors(from imageSetItem: SequenceItem) throws -> [ImageSetSelector] {
+        guard let selectorSequence = imageSetItem[.selectorSequence]?.sequenceItems else {
             return []
         }
         
         var selectors: [ImageSetSelector] = []
         
         for selectorItem in selectorSequence {
-            guard let attributeTag = selectorItem.tag(for: .selectorAttribute) else {
+            // Parse the attribute tag from Selector Attribute (AT VR)
+            guard let attributeElement = selectorItem[.selectorAttribute],
+                  let attributeTag = try? Self.parseAttributeTag(from: attributeElement) else {
                 continue
             }
             
-            let valueNumber = selectorItem.integer(for: .selectorValueNumber)
+            let valueNumber = selectorItem[.selectorValueNumber]?.integerStringValue?.value
             let operatorString = selectorItem.string(for: .filterByOperator)
             let filterOperator = operatorString.flatMap { FilterOperator(rawValue: $0) }
             
             // Parse selector values
             var values: [String] = []
-            if let valueData = selectorItem.element(for: attributeTag) {
-                if let strValue = try? valueData.string() {
+            if let valueElement = selectorItem[attributeTag] {
+                if let strValue = valueElement.stringValue {
                     values = strValue.components(separatedBy: "\\")
                 }
             }
@@ -171,8 +173,8 @@ public struct HangingProtocolParser {
         return selectors
     }
     
-    private func parseSortOperations(from imageSetItem: DataSet) -> [SortOperation] {
-        guard let sortSequence = imageSetItem.sequence(for: .sortingOperationsSequence) else {
+    private func parseSortOperations(from imageSetItem: SequenceItem) -> [SortOperation] {
+        guard let sortSequence = imageSetItem[.sortingOperationsSequence]?.sequenceItems else {
             return []
         }
         
@@ -186,7 +188,12 @@ public struct HangingProtocolParser {
             
             let directionString = sortItem.string(for: .sortingDirection)
             let direction = directionString.flatMap { SortDirection(rawValue: $0) } ?? .ascending
-            let attribute = sortItem.tag(for: .selectorAttribute)
+            
+            // Parse attribute tag if present
+            var attribute: Tag?
+            if let attrElement = sortItem[.selectorAttribute] {
+                attribute = try? Self.parseAttributeTag(from: attrElement)
+            }
             
             operations.append(SortOperation(
                 sortByCategory: category,
@@ -198,8 +205,8 @@ public struct HangingProtocolParser {
         return operations
     }
     
-    private func parseTimeSelection(from imageSetItem: DataSet) -> TimeBasedSelection? {
-        let relativeTime = imageSetItem.integer(for: .relativeTime)
+    private func parseTimeSelection(from imageSetItem: SequenceItem) -> TimeBasedSelection? {
+        let relativeTime = imageSetItem[.relativeTime]?.integerStringValue?.value
         let relativeTimeUnitsString = imageSetItem.string(for: .relativeTimeUnits)
         let relativeTimeUnits = relativeTimeUnitsString.flatMap { RelativeTimeUnits(rawValue: $0) }
         let abstractPriorValue = imageSetItem.string(for: .abstractPriorValue)
@@ -225,15 +232,15 @@ public struct HangingProtocolParser {
         var definitions: [ScreenDefinition] = []
         
         for screenItem in screenSequence {
-            guard let verticalPixels = screenItem.integer(for: .numberOfVerticalPixels),
-                  let horizontalPixels = screenItem.integer(for: .numberOfHorizontalPixels) else {
+            guard let verticalPixels = screenItem[.numberOfVerticalPixels]?.integerStringValue?.value,
+                  let horizontalPixels = screenItem[.numberOfHorizontalPixels]?.integerStringValue?.value else {
                 continue
             }
             
-            let spatialPosition = screenItem.doubles(for: .displayEnvironmentSpatialPosition)
-            let minGrayscaleBitDepth = screenItem.integer(for: .screenMinimumGrayscaleBitDepth)
-            let minColorBitDepth = screenItem.integer(for: .screenMinimumColorBitDepth)
-            let maxRepaintTime = screenItem.integer(for: .applicationMaximumRepaintTime)
+            let spatialPosition = screenItem[.displayEnvironmentSpatialPosition]?.decimalStringValues?.compactMap { $0.value }
+            let minGrayscaleBitDepth = screenItem[.screenMinimumGrayscaleBitDepth]?.integerStringValue?.value
+            let minColorBitDepth = screenItem[.screenMinimumColorBitDepth]?.integerStringValue?.value
+            let maxRepaintTime = screenItem[.applicationMaximumRepaintTime]?.integerStringValue?.value
             
             definitions.append(ScreenDefinition(
                 verticalPixels: verticalPixels,
@@ -258,12 +265,12 @@ public struct HangingProtocolParser {
         var displaySets: [DisplaySet] = []
         
         for (index, displaySetItem) in displaySetsSequence.enumerated() {
-            let number = displaySetItem.integer(for: .displaySetNumber) ?? (index + 1)
+            let number = displaySetItem[.displaySetNumber]?.integerStringValue?.value ?? (index + 1)
             let label = displaySetItem.string(for: .displaySetLabel)
-            let presentationGroup = displaySetItem.integer(for: .displaySetPresentationGroup)
+            let presentationGroup = displaySetItem[.displaySetPresentationGroup]?.integerStringValue?.value
             let groupDescription = displaySetItem.string(for: .displaySetPresentationGroupDescription)
             let partialDataHandling = displaySetItem.string(for: .partialDataDisplayHandling)
-            let scrollingGroup = displaySetItem.integer(for: .displaySetScrollingGroup)
+            let scrollingGroup = displaySetItem[.displaySetScrollingGroup]?.integerStringValue?.value
             let imageBoxes = try parseImageBoxes(from: displaySetItem)
             let displayOptions = parseDisplayOptions(from: displaySetItem)
             
@@ -282,38 +289,38 @@ public struct HangingProtocolParser {
         return displaySets
     }
     
-    private func parseImageBoxes(from displaySetItem: DataSet) throws -> [ImageBox] {
-        guard let imageBoxSequence = displaySetItem.sequence(for: .imageBoxesSequence) else {
+    private func parseImageBoxes(from displaySetItem: SequenceItem) throws -> [ImageBox] {
+        guard let imageBoxSequence = displaySetItem[.imageBoxesSequence]?.sequenceItems else {
             return []
         }
         
         var imageBoxes: [ImageBox] = []
         
         for (index, boxItem) in imageBoxSequence.enumerated() {
-            let number = boxItem.integer(for: .imageBoxNumber) ?? (index + 1)
+            let number = boxItem[.imageBoxNumber]?.integerStringValue?.value ?? (index + 1)
             let layoutTypeString = boxItem.string(for: .imageBoxLayoutType)
             let layoutType = layoutTypeString.flatMap { ImageBoxLayoutType(rawValue: $0) } ?? .stack
             
             // Parse referenced image set numbers
-            var imageSetNumbers: [Int] = []
+            let imageSetNumbers: [Int] = []
             // This would typically come from a reference sequence
             
-            let tileHorizontal = boxItem.integer(for: .imageBoxTileHorizontalDimension)
-            let tileVertical = boxItem.integer(for: .imageBoxTileVerticalDimension)
+            let tileHorizontal = boxItem[.imageBoxTileHorizontalDimension]?.integerStringValue?.value
+            let tileVertical = boxItem[.imageBoxTileVerticalDimension]?.integerStringValue?.value
             
             let scrollDirectionString = boxItem.string(for: .imageBoxScrollDirection)
             let scrollDirection = scrollDirectionString.flatMap { ScrollDirection(rawValue: $0) }
             
             let smallScrollTypeString = boxItem.string(for: .imageBoxSmallScrollType)
             let smallScrollType = smallScrollTypeString.flatMap { ScrollType(rawValue: $0) }
-            let smallScrollAmount = boxItem.integer(for: .imageBoxSmallScrollAmount)
+            let smallScrollAmount = boxItem[.imageBoxSmallScrollAmount]?.integerStringValue?.value
             
             let largeScrollTypeString = boxItem.string(for: .imageBoxLargeScrollType)
             let largeScrollType = largeScrollTypeString.flatMap { ScrollType(rawValue: $0) }
-            let largeScrollAmount = boxItem.integer(for: .imageBoxLargeScrollAmount)
+            let largeScrollAmount = boxItem[.imageBoxLargeScrollAmount]?.integerStringValue?.value
             
-            let overlapPriority = boxItem.integer(for: .imageBoxOverlapPriority)
-            let cineRelative = boxItem.double(for: .cineRelativeToRealTime)
+            let overlapPriority = boxItem[.imageBoxOverlapPriority]?.integerStringValue?.value
+            let cineRelative = boxItem[.cineRelativeToRealTime]?.decimalStringValue?.value
             
             let reformattingOp = parseReformattingOperation(from: boxItem)
             
@@ -341,14 +348,14 @@ public struct HangingProtocolParser {
         return imageBoxes
     }
     
-    private func parseReformattingOperation(from boxItem: DataSet) -> ReformattingOperation? {
+    private func parseReformattingOperation(from boxItem: SequenceItem) -> ReformattingOperation? {
         guard let typeString = boxItem.string(for: .reformattingOperationType),
               let type = ReformattingType(rawValue: typeString) else {
             return nil
         }
         
-        let thickness = boxItem.double(for: .reformattingThickness)
-        let interval = boxItem.double(for: .reformattingInterval)
+        let thickness = boxItem[.reformattingThickness]?.decimalStringValue?.value
+        let interval = boxItem[.reformattingInterval]?.decimalStringValue?.value
         let initialViewDirection = boxItem.string(for: .reformattingOperationInitialViewDirection)
         
         return ReformattingOperation(
@@ -359,7 +366,7 @@ public struct HangingProtocolParser {
         )
     }
     
-    private func parseDisplayOptions(from displaySetItem: DataSet) -> DisplayOptions {
+    private func parseDisplayOptions(from displaySetItem: SequenceItem) -> DisplayOptions {
         let patientOrientation = displaySetItem.string(for: .displaySetPatientOrientation)
         let voiType = displaySetItem.string(for: .voiType)
         let pseudoColorType = displaySetItem.string(for: .pseudoColorType)
@@ -413,17 +420,23 @@ public enum HangingProtocolError: Error, LocalizedError {
 
 private extension DataSet {
     func tag(for tag: Tag) -> Tag? {
-        guard let element = element(for: tag),
-              let data = try? element.data() else {
-            return nil
-        }
+        guard let element = self[tag] else { return nil }
+        return try? HangingProtocolParser.parseAttributeTag(from: element)
+    }
+}
+
+private extension HangingProtocolParser {
+    static func parseAttributeTag(from element: DataElement) throws -> Tag {
+        let data = element.valueData
         
         // Parse tag from AttributeTag VR (group, element as UInt16 pairs)
-        guard data.count >= 4 else { return nil }
+        guard data.count >= 4 else {
+            throw HangingProtocolError.parsingFailed("Invalid attribute tag data")
+        }
         
         let group = data.withUnsafeBytes { $0.load(fromByteOffset: 0, as: UInt16.self) }
-        let element = data.withUnsafeBytes { $0.load(fromByteOffset: 2, as: UInt16.self) }
+        let elementValue = data.withUnsafeBytes { $0.load(fromByteOffset: 2, as: UInt16.self) }
         
-        return Tag(group: group, element: element)
+        return Tag(group: group, element: elementValue)
     }
 }

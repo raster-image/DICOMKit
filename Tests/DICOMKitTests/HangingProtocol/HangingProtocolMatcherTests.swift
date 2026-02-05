@@ -22,8 +22,8 @@ final class HangingProtocolMatcherTests: XCTestCase {
     }
     
     func test_matcher_initialization_withProtocols() async {
-        let `protocol` = HangingProtocol(name: "Test")
-        let matcher = HangingProtocolMatcher(protocols: [`protocol`])
+        let hangingProtocol = HangingProtocol(name: "Test")
+        let matcher = HangingProtocolMatcher(protocols: [hangingProtocol])
         let protocols = await matcher.allProtocols()
         
         XCTAssertEqual(protocols.count, 1, "Should initialize with provided protocols")
@@ -31,9 +31,9 @@ final class HangingProtocolMatcherTests: XCTestCase {
     
     func test_matcher_addProtocol() async {
         let matcher = HangingProtocolMatcher()
-        let `protocol` = HangingProtocol(name: "Test Protocol")
+        let hangingProtocol = HangingProtocol(name: "Test Protocol")
         
-        await matcher.add(protocol: `protocol`)
+        await matcher.add(protocol: hangingProtocol)
         let protocols = await matcher.allProtocols()
         
         XCTAssertEqual(protocols.count, 1, "Should add protocol")
@@ -41,8 +41,8 @@ final class HangingProtocolMatcherTests: XCTestCase {
     }
     
     func test_matcher_removeProtocol() async {
-        let `protocol` = HangingProtocol(name: "To Remove")
-        let matcher = HangingProtocolMatcher(protocols: [`protocol`])
+        let hangingProtocol = HangingProtocol(name: "To Remove")
+        let matcher = HangingProtocolMatcher(protocols: [hangingProtocol])
         
         await matcher.remove(protocolNamed: "To Remove")
         let protocols = await matcher.allProtocols()
@@ -51,8 +51,8 @@ final class HangingProtocolMatcherTests: XCTestCase {
     }
     
     func test_matcher_removeNonexistentProtocol() async {
-        let `protocol` = HangingProtocol(name: "Test")
-        let matcher = HangingProtocolMatcher(protocols: [`protocol`])
+        let hangingProtocol = HangingProtocol(name: "Test")
+        let matcher = HangingProtocolMatcher(protocols: [hangingProtocol])
         
         await matcher.remove(protocolNamed: "Nonexistent")
         let protocols = await matcher.allProtocols()
@@ -63,8 +63,8 @@ final class HangingProtocolMatcherTests: XCTestCase {
     // MARK: - Protocol Matching Tests
     
     func test_matchProtocol_noEnvironments_matchesAll() async {
-        let `protocol` = HangingProtocol(name: "Generic")
-        let matcher = HangingProtocolMatcher(protocols: [`protocol`])
+        let hangingProtocol = HangingProtocol(name: "Generic")
+        let matcher = HangingProtocolMatcher(protocols: [hangingProtocol])
         
         let studyInfo = StudyInfo(studyInstanceUID: "1.2.3", modalities: ["CT"])
         let match = await matcher.matchProtocol(for: studyInfo)
@@ -75,8 +75,8 @@ final class HangingProtocolMatcherTests: XCTestCase {
     
     func test_matchProtocol_modalityMatch() async {
         let env = HangingProtocolEnvironment(modality: "CT")
-        let `protocol` = HangingProtocol(name: "CT Protocol", environments: [env])
-        let matcher = HangingProtocolMatcher(protocols: [`protocol`])
+        let hangingProtocol = HangingProtocol(name: "CT Protocol", environments: [env])
+        let matcher = HangingProtocolMatcher(protocols: [hangingProtocol])
         
         let studyInfo = StudyInfo(studyInstanceUID: "1.2.3", modalities: ["CT"])
         let match = await matcher.matchProtocol(for: studyInfo)
@@ -87,8 +87,8 @@ final class HangingProtocolMatcherTests: XCTestCase {
     
     func test_matchProtocol_modalityMismatch() async {
         let env = HangingProtocolEnvironment(modality: "MR")
-        let `protocol` = HangingProtocol(name: "MR Protocol", environments: [env])
-        let matcher = HangingProtocolMatcher(protocols: [`protocol`])
+        let hangingProtocol = HangingProtocol(name: "MR Protocol", environments: [env])
+        let matcher = HangingProtocolMatcher(protocols: [hangingProtocol])
         
         let studyInfo = StudyInfo(studyInstanceUID: "1.2.3", modalities: ["CT"])
         let match = await matcher.matchProtocol(for: studyInfo)
@@ -98,8 +98,8 @@ final class HangingProtocolMatcherTests: XCTestCase {
     
     func test_matchProtocol_lateralityMatch() async {
         let env = HangingProtocolEnvironment(modality: "DX", laterality: "L")
-        let `protocol` = HangingProtocol(name: "Left DX", environments: [env])
-        let matcher = HangingProtocolMatcher(protocols: [`protocol`])
+        let hangingProtocol = HangingProtocol(name: "Left DX", environments: [env])
+        let matcher = HangingProtocolMatcher(protocols: [hangingProtocol])
         
         let studyInfo = StudyInfo(studyInstanceUID: "1.2.3", modalities: ["DX"], laterality: "L")
         let match = await matcher.matchProtocol(for: studyInfo)
@@ -109,8 +109,8 @@ final class HangingProtocolMatcherTests: XCTestCase {
     
     func test_matchProtocol_lateralityMismatch() async {
         let env = HangingProtocolEnvironment(modality: "DX", laterality: "R")
-        let `protocol` = HangingProtocol(name: "Right DX", environments: [env])
-        let matcher = HangingProtocolMatcher(protocols: [`protocol`])
+        let hangingProtocol = HangingProtocol(name: "Right DX", environments: [env])
+        let matcher = HangingProtocolMatcher(protocols: [hangingProtocol])
         
         let studyInfo = StudyInfo(studyInstanceUID: "1.2.3", modalities: ["DX"], laterality: "L")
         let match = await matcher.matchProtocol(for: studyInfo)
@@ -121,8 +121,8 @@ final class HangingProtocolMatcherTests: XCTestCase {
     func test_matchProtocol_multipleEnvironments() async {
         let env1 = HangingProtocolEnvironment(modality: "CT")
         let env2 = HangingProtocolEnvironment(modality: "MR")
-        let `protocol` = HangingProtocol(name: "Multi-Modal", environments: [env1, env2])
-        let matcher = HangingProtocolMatcher(protocols: [`protocol`])
+        let hangingProtocol = HangingProtocol(name: "Multi-Modal", environments: [env1, env2])
+        let matcher = HangingProtocolMatcher(protocols: [hangingProtocol])
         
         let studyInfo = StudyInfo(studyInstanceUID: "1.2.3", modalities: ["MR"])
         let match = await matcher.matchProtocol(for: studyInfo)
@@ -168,8 +168,8 @@ final class HangingProtocolMatcherTests: XCTestCase {
     // MARK: - User Group Matching Tests
     
     func test_matchProtocol_userGroupMatch() async {
-        let `protocol` = HangingProtocol(name: "Radiology", userGroups: ["Radiology"])
-        let matcher = HangingProtocolMatcher(protocols: [`protocol`])
+        let hangingProtocol = HangingProtocol(name: "Radiology", userGroups: ["Radiology"])
+        let matcher = HangingProtocolMatcher(protocols: [hangingProtocol])
         
         let studyInfo = StudyInfo(studyInstanceUID: "1.2.3")
         let match = await matcher.matchProtocol(for: studyInfo, userGroup: "Radiology")
@@ -178,8 +178,8 @@ final class HangingProtocolMatcherTests: XCTestCase {
     }
     
     func test_matchProtocol_userGroupMismatch() async {
-        let `protocol` = HangingProtocol(name: "Radiology", userGroups: ["Radiology"])
-        let matcher = HangingProtocolMatcher(protocols: [`protocol`])
+        let hangingProtocol = HangingProtocol(name: "Radiology", userGroups: ["Radiology"])
+        let matcher = HangingProtocolMatcher(protocols: [hangingProtocol])
         
         let studyInfo = StudyInfo(studyInstanceUID: "1.2.3")
         let match = await matcher.matchProtocol(for: studyInfo, userGroup: "Cardiology")
