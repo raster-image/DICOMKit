@@ -22,13 +22,13 @@ public struct PrivateCreator: Sendable, Hashable, Equatable {
     /// Private data elements use (group, block*256 + nn) where nn is 0x10-0xFF.
     public let element: UInt16
     
-    /// Block number (0x00 - 0xEF)
+    /// Block number (0x10 - 0xFF)
     ///
-    /// Computed from the private creator element. This block is used as the
-    /// upper byte of private data element numbers in this group.
+    /// The block number is the lower byte of the private creator element.
+    /// Private data elements use (group, block*256 + nn) where nn is 0x00-0xFF.
     public var blockNumber: UInt8 {
         guard element >= 0x0010 && element <= 0x00FF else { return 0 }
-        return UInt8(element - 0x0010)
+        return UInt8(element & 0xFF)
     }
     
     /// Creates a private creator
@@ -48,10 +48,9 @@ public struct PrivateCreator: Sendable, Hashable, Equatable {
     }
     
     /// Returns the tag for a private data element in this creator's block
-    /// - Parameter offset: Element offset within the block (0x10-0xFF)
+    /// - Parameter offset: Element offset within the block (0x00-0xFF)
     /// - Returns: Private data element tag
     public func privateTag(offset: UInt8) -> Tag? {
-        guard offset >= 0x10 && offset <= 0xFF else { return nil }
         let elementNumber = UInt16(blockNumber) * 256 + UInt16(offset)
         return Tag(group: group, element: elementNumber)
     }
@@ -61,8 +60,9 @@ public struct PrivateCreator: Sendable, Hashable, Equatable {
     /// - Returns: True if the tag is in this creator's private block
     public func owns(_ tag: Tag) -> Bool {
         guard tag.group == group else { return false }
-        guard tag.element >= 0x1000 else { return false }
         
+        // Block number is upper byte of element number
+        // For creator at 0x0010, block is 0x10, elements are 0x1000-0x10FF
         let tagBlock = UInt8(tag.element >> 8)
         return tagBlock == blockNumber
     }

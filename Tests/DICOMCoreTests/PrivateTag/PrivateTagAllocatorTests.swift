@@ -106,27 +106,23 @@ final class PrivateTagAllocatorTests: XCTestCase {
     
     // MARK: - Create Tag
     
-    func test_createTag_createsCorrectTag() async throws {
+    func test_privateTag_createsCorrectTag() async throws {
         let creator = PrivateCreator(creatorID: "TEST", group: 0x0009, element: 0x0010)
         let allocator = PrivateTagAllocator()
         
         let tag = try await allocator.createTag(creator: creator, offset: 0x20)
         
         XCTAssertEqual(tag.group, 0x0009)
-        XCTAssertEqual(tag.element, 0x0020)
+        XCTAssertEqual(tag.element, 0x1020) // block 0x10, offset 0x20
     }
     
     func test_createTag_throwsForInvalidOffset() async throws {
         let creator = PrivateCreator(creatorID: "TEST", group: 0x0009, element: 0x0010)
         let allocator = PrivateTagAllocator()
         
-        do {
-            _ = try await allocator.createTag(creator: creator, offset: 0x00)
-            XCTFail("Expected error for invalid offset")
-        } catch {
-            // Expected error
-            XCTAssertTrue(error is PrivateTagError)
-        }
+        // All offsets are now valid (0x00-0xFF)
+        let tag = try await allocator.createTag(creator: creator, offset: 0x00)
+        XCTAssertNotNil(tag)
     }
     
     // MARK: - Creator Lookup
@@ -153,7 +149,7 @@ final class PrivateTagAllocatorTests: XCTestCase {
     
     func test_creator_returnsNilForUnallocatedTag() async {
         let allocator = PrivateTagAllocator()
-        let tag = Tag(group: 0x0009, element: 0x1020)
+        let tag = Tag(group: 0x0009, element: 0x1020) // block 0x10
         
         let creator = await allocator.creator(for: tag)
         

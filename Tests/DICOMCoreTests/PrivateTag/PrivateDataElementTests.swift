@@ -16,7 +16,7 @@ final class PrivateDataElementTests: XCTestCase {
     }
     
     func test_blockOffset_computesCorrectly() {
-        let tag = Tag(group: 0x0009, element: 0x0020)
+        let tag = Tag(group: 0x0009, element: 0x1020) // block 0x10, offset 0x20
         let creator = PrivateCreator(creatorID: "TEST", group: 0x0009, element: 0x0010)
         let element = DataElement(tag: tag, vr: .LO, length: 0, valueData: Data())
         
@@ -26,8 +26,8 @@ final class PrivateDataElementTests: XCTestCase {
     }
     
     func test_blockOffset_returnsNilForNonOwnedTag() {
-        let tag = Tag(group: 0x0009, element: 0x0120) // Block 0x01
-        let creator = PrivateCreator(creatorID: "TEST", group: 0x0009, element: 0x0010) // Block 0x00
+        let tag = Tag(group: 0x0009, element: 0x1120) // Block 0x11
+        let creator = PrivateCreator(creatorID: "TEST", group: 0x0009, element: 0x0010) // Block 0x10
         let element = DataElement(tag: tag, vr: .LO, length: 0, valueData: Data())
         
         let privateElement = PrivateDataElement(tag: tag, creator: creator, element: element)

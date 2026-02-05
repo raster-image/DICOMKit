@@ -73,10 +73,9 @@ public actor PrivateTagAllocator {
     /// Creates a private tag in an allocated block
     /// - Parameters:
     ///   - creator: Private creator
-    ///   - offset: Element offset within block (0x10-0xFF)
+    ///   - offset: Element offset within block (0x00-0xFF)
     /// - Returns: Private tag
-    /// - Throws: If offset is invalid
-    public func createTag(creator: PrivateCreator, offset: UInt8) throws -> Tag {
+    public func createTag(creator: PrivateCreator, offset: UInt8) async throws -> Tag {
         guard let tag = creator.privateTag(offset: offset) else {
             throw PrivateTagError.invalidOffset(offset)
         }
@@ -88,10 +87,13 @@ public actor PrivateTagAllocator {
     /// - Returns: Private creator if known
     public func creator(for tag: Tag) -> PrivateCreator? {
         guard tag.isPrivate else { return nil }
-        guard tag.element >= 0x1000 else { return nil }
         
+        // Block number is the upper byte of the element
         let blockNumber = UInt8(tag.element >> 8)
-        let creatorElement = 0x0010 + UInt16(blockNumber)
+        guard blockNumber >= 0x10 else { return nil }
+        
+        // Creator element is the block number
+        let creatorElement = UInt16(blockNumber)
         
         return allocations[tag.group]?[creatorElement]
     }

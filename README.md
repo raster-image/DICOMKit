@@ -41,8 +41,6 @@ DICOMKit is a modern, Swift-native library for reading, writing, and parsing DIC
     - ✅ 2 tests for `PrivateDataElement` (initialization, description formatting)
 
 - ✅ **Real-World Value Mapping (RWV LUT) (v1.0.8)**
-
-- ✅ **Real-World Value Mapping (RWV LUT) (NEW in v1.0.8)**
   - ✅ **General-Purpose RWV Support** - Complete implementation of Real World Value Mapping (PS3.3 C.7.6.16.2.11)
     - ✅ `RealWorldValueLUT` for transforming stored pixel values to physical quantities
     - ✅ `RealWorldValueLUTParser` for parsing RWV Mapping Sequence from DICOM
