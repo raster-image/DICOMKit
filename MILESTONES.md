@@ -3167,9 +3167,9 @@ This milestone is divided into modular sub-milestones based on feature complexit
 | 10.4 RT Structure Set | v1.0.4 | Very High | ✅ Completed | ROI contours, structure visualization (33 tests, 100% pass rate) |
 | 10.5 RT Plan/Dose | v1.0.5 | Very High | ✅ Completed | Beam definitions, dose grids, DVH (35 tests, 100% pass rate) |
 | 10.6 Segmentation | v1.0.6 | High | ✅ Completed | SEG IOD, binary/fractional masks, rendering, builder (98 tests, 100% pass rate) |
-| 10.7 Parametric Maps | v1.0.7 | Medium | Planned | Quantitative imaging, float pixel data |
-| 10.8 RWV LUT | v1.0.8 | Medium | Planned | Real world value mapping, SUV calculation |
-| 10.9 Character Sets | v1.0.9 | High | Planned | ISO 2022, international text support |
+| 10.7 Parametric Maps | v1.0.7 | Medium | ✅ Completed | Quantitative imaging, float pixel data (55 tests, 100% pass rate) |
+| 10.8 RWV LUT | v1.0.8 | Medium | ✅ Completed | Real world value mapping, SUV calculation (69 tests, 100% pass rate) |
+| 10.9 Character Sets | v1.0.9 | High | ✅ Completed | ISO 2022, international text support (95 tests, 100% pass rate) |
 | 10.10 Private Tags | v1.0.10 | Medium | Planned | Vendor private tag dictionaries |
 | 10.11 ICC Color | v1.0.11 | Medium | Planned | ICC profile color management |
 | 10.12 Performance | v1.0.12 | High | Planned | Memory, parsing, GPU optimization |
