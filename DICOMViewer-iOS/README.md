@@ -173,7 +173,8 @@ DICOMViewer-iOS/
 │   └── Measurement.swift         # Measurement models
 ├── ViewModels/
 │   ├── LibraryViewModel.swift    # Library management
-│   └── ViewerViewModel.swift     # Image viewer state with GSPS support
+│   ├── ViewerViewModel.swift     # Image viewer state with GSPS support
+│   └── ComparisonViewModel.swift # NEW: Comparison mode synchronization
 ├── Views/
 │   ├── Library/
 │   │   └── LibraryView.swift     # Study browser
@@ -181,7 +182,8 @@ DICOMViewer-iOS/
 │   │   ├── ViewerContainerView.swift     # Main viewer with GSPS integration
 │   │   ├── SeriesPickerView.swift
 │   │   ├── PresentationStateOverlayView.swift  # GSPS annotation/shutter rendering
-│   │   └── PresentationStatePickerView.swift   # GSPS selection UI
+│   │   ├── PresentationStatePickerView.swift   # GSPS selection UI
+│   │   └── ComparisonView.swift                # NEW: Side-by-side comparison view
 │   ├── Metadata/
 │   │   └── MetadataView.swift
 │   └── Settings/
@@ -193,7 +195,8 @@ DICOMViewer-iOS/
 │   └── PresentationStateService.swift # GSPS loading and management
 ├── Tests/
 │   ├── MeasurementTests.swift         # Measurement model tests
-│   └── PresentationStateTests.swift   # GSPS functionality tests
+│   ├── PresentationStateTests.swift   # GSPS functionality tests
+│   └── ComparisonTests.swift          # NEW: Comparison mode tests (15+ tests)
 └── Resources/
     └── (Assets, Localization)
 ```
@@ -283,6 +286,35 @@ See [BUILD.md](BUILD.md) for detailed instructions, troubleshooting, and advance
    - Rotate icon: Contains spatial transformation
 5. Select "None" to remove the presentation state and return to default display
 6. A blue "GSPS" indicator appears in the image overlay when a presentation state is active
+
+### Using Comparison Mode (NEW)
+
+1. Open an image in the viewer
+2. Tap the "Compare" button (split rectangle icon) in the toolbar
+3. The comparison view opens with two side-by-side viewers:
+   - Left pane shows the current series
+   - Right pane shows a second series (or the same series if only one is available)
+4. Tap the series icon in either pane header to select a different series
+5. Use the link icon at the bottom to toggle synchronization:
+   - When linked (blue): Controls are synchronized between both viewers
+   - When unlinked (gray): Each viewer can be controlled independently
+6. Tap the gear icon to customize what is synchronized:
+   - Frame Navigation: Navigate frames in both viewers together
+   - Window/Level: Apply same W/L settings to both images
+   - Zoom & Pan: Synchronize zoom level and pan position
+   - Rotation & Flip: Apply same transforms to both images
+7. Use the "Swap" button to exchange the left and right images
+8. When synchronized, use gestures on either pane to control both:
+   - Pinch to zoom both images simultaneously
+   - Pan to move both images together
+   - Use frame controls at the bottom to navigate both series
+9. Tap "Done" to exit comparison mode and return to single viewer
+
+**Use Cases:**
+- Compare pre/post treatment images
+- Compare different sequences (T1 vs T2 MRI)
+- Compare same anatomy at different time points
+- Review left/right anatomical symmetry
 
 ## Architecture
 

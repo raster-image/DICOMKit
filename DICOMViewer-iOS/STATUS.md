@@ -82,9 +82,13 @@ open DICOMViewer.xcodeproj
 ### ✅ Phase 4: Polish and Testing (Week 4) - COMPLETE
 **Status:** 100% Complete  
 **Features Delivered:**
-- Side-by-side comparison mode
-- Synchronized scrolling, W/L, zoom/pan
-- Brightness/contrast controls
+- Side-by-side comparison mode ✨ **NEW**
+  - Two-pane layout with independent series selection
+  - Configurable synchronization (frames, W/L, zoom/pan, transforms)
+  - Link/unlink toggle for independent control
+  - Swap panes functionality
+  - Sync settings customization sheet
+- Synchronized scrolling, W/L, zoom/pan ✨ **NEW**
 - Settings screen with preferences
 - Dark and light mode support
 - VoiceOver accessibility labels
@@ -93,10 +97,12 @@ open DICOMViewer.xcodeproj
 - Loading indicators and error alerts
 - Smooth animations
 - Performance optimization (thumbnails, rendering, memory)
-- Comprehensive testing (35+ unit tests)
+- Comprehensive testing (50+ unit tests) ✨ **Updated**
 - Multi-device testing (iPhone, iPad)
 
-**Files:** Settings view, comparison features, accessibility enhancements
+**Files:** Settings view, comparison features (ComparisonView, ComparisonViewModel, ComparisonTests), accessibility enhancements
+
+**Note:** Brightness/contrast controls (separate from W/L) are planned for a future update.
 
 ## Technical Specifications
 
@@ -118,17 +124,17 @@ DICOMViewer-iOS/
 ├── App/                    # 2 files (entry point, navigation)
 ├── Models/                 # 4 files (Study, Series, Instance, Measurement)
 ├── Services/               # 4 files (File I/O, rendering, thumbnails, GSPS)
-├── ViewModels/             # 2 files (Library, Viewer state management)
-├── Views/                  # 8+ files (Library, Viewer, Metadata, Settings)
-├── Tests/                  # 2 files (35+ unit tests)
+├── ViewModels/             # 3 files (Library, Viewer, Comparison) ✨ **+1**
+├── Views/                  # 9 files (Library, Viewer, Comparison, Metadata, Settings) ✨ **+1**
+├── Tests/                  # 3 files (50+ unit tests) ✨ **+1**
 └── Documentation/          # 5 docs (BUILD.md, QUICK_START.md, etc.)
 ```
 
 ### Code Metrics
-- **Swift Files:** 19 implementation files
-- **Total Lines:** ~3,500 lines
-- **Test Files:** 2 files, 717 lines
-- **Test Count:** 35+ unit tests
+- **Swift Files:** 22 implementation files ✨ **+3**
+- **Total Lines:** ~4,500 lines ✨ **+1,000**
+- **Test Files:** 3 files, 1,000+ lines ✨ **Updated**
+- **Test Count:** 50+ unit tests ✨ **+15**
 - **Documentation:** 5 comprehensive guides
 
 ## Feature Completeness
@@ -142,9 +148,10 @@ DICOMViewer-iOS/
 | **Measurements** | Length, Angle, ROI (3 types), Statistics | ✅ 100% |
 | **Export** | PNG/JPEG, Photos, Share, Burn-in | ✅ 100% |
 | **Metadata** | Viewer, Search, Groups, Copy | ✅ 100% |
+| **Comparison Mode** | Side-by-side, Synchronized controls, Swap panes | ✅ **NEW** 100% |
 | **Accessibility** | VoiceOver, Dynamic Type, Haptics | ✅ 100% |
 | **Performance** | Optimized thumbnails, rendering, memory | ✅ 100% |
-| **Testing** | Unit tests for calculations and GSPS | ✅ 100% |
+| **Testing** | Unit tests for calculations, GSPS, comparison | ✅ 100% |
 | **Project Setup** | Automated project generation | ✅ 100% |
 
 ## Documentation Status
