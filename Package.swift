@@ -93,6 +93,10 @@ let package = Package(
             name: "DICOMWebTests",
             dependencies: ["DICOMWeb", "DICOMKit"]
         ),
+        .testTarget(
+            name: "DICOMToolsTests",
+            dependencies: ["DICOMKit", "DICOMCore", "DICOMDictionary"]
+        ),
         .executableTarget(
             name: "dicom-info",
             dependencies: [
